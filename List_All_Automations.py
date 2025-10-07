@@ -1,4 +1,91 @@
-﻿import tkinter as tk
+"""
+Freshdesk Automation Rules Export GUI
+
+DESCRIPTION:
+This script provides a graphical user interface for exporting Freshdesk automation
+rules from either sandbox or production environments. It fetches automation rules
+by type (Ticket Creation, Time Triggers, Ticket Updates) and exports them to
+Excel or CSV format for analysis and documentation purposes.
+
+REQUIREMENTS:
+- Python 3.x
+- tkinter (usually included with Python)
+- requests library (install with: pip install requests)
+- pandas library (install with: pip install pandas)
+- Valid Freshdesk API key with automation rules read permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace API_KEY_SANDBOX with your actual Freshdesk API key
+2. Replace SANDBOX_DOMAIN and PROD_DOMAIN with your actual domains
+3. Ensure your API key has permissions for automation rules access
+4. Run the script: python List_All_Automations.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Automation Rules API: https://developers.freshdesk.com/api/#automation_rules
+- Authentication: Basic Auth with API key
+
+INPUT PARAMETERS:
+- API_KEY_SANDBOX: Your Freshdesk API key
+- SANDBOX_DOMAIN: Sandbox environment domain
+- PROD_DOMAIN: Production environment domain
+- AUTOMATION_TYPES: Mapping of automation type IDs to names
+
+OUTPUT:
+- Excel/CSV file with automation rules data
+- GUI interface for environment selection and file export
+- Console output showing progress and results
+
+AUTOMATION TYPES EXPORTED:
+- Type 1: Ticket Creation automations
+- Type 3: Time Trigger automations
+- Type 4: Ticket Update automations
+
+EXCEL/CSV OUTPUT INCLUDES:
+- Automation Type (Creation, Time Triggers, Updates)
+- Rule Name and Position
+- Performer and Active status
+- Events, Conditions, and Actions (JSON format)
+- Last Updated timestamp
+
+ERROR HANDLING:
+- Handles HTTP 404 (rules not found) errors
+- Handles HTTP 429 (rate limit) errors with automatic retry
+- Handles network and parsing errors
+- Continues processing even if individual rule types fail
+
+RATE LIMIT HANDLING:
+- Automatically detects rate limit responses (HTTP 429)
+- Waits for the specified retry-after period
+- Continues processing remaining rule types after rate limit delay
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has automation rules read permissions
+- Check Freshdesk domain names are correct
+- Ensure network connectivity to Freshdesk API
+- Monitor rate limit usage in Freshdesk dashboard
+- Check that automation rules exist in your Freshdesk account
+
+PERFORMANCE CONSIDERATIONS:
+- Processes automation rules in pages (100 per page by default)
+- Handles pagination automatically
+- Large numbers of rules may take significant time to process
+- GUI remains responsive during background processing
+
+USAGE SCENARIOS:
+- Document automation rules for compliance auditing
+- Analyze automation configurations across environments
+- Backup automation rules before making changes
+- Compare automation setups between sandbox and production
+"""
+
+import tkinter as tk
 from tkinter import filedialog, messagebox
 import requests
 import pandas as pd

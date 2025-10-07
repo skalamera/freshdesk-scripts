@@ -1,4 +1,75 @@
-﻿import requests
+"""
+Freshdesk Subscription Fulfillment Test Ticket Script
+
+DESCRIPTION:
+This script creates a single test ticket for subscription fulfillment testing
+purposes. It creates a ticket with a specific format for item quantities and
+tracking codes commonly used in subscription management workflows.
+
+REQUIREMENTS:
+- Python 3.x
+- requests library (install with: pip install requests)
+- Valid Freshdesk API key with ticket creation permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace API_KEY with your actual Freshdesk API key
+2. Replace DOMAIN with your Freshdesk domain (e.g., 'yourcompany.freshdesk.com')
+3. Update ticket_data with your desired subject, description, and email
+4. Ensure your API key has permissions for ticket creation
+5. Run the script: python test_sub_ticket_creation.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Tickets API: https://developers.freshdesk.com/api/#create_ticket
+- Authentication: Basic Auth with API key
+
+INPUT PARAMETERS:
+- API_KEY: Your Freshdesk API key
+- DOMAIN: Your Freshdesk domain
+- ticket_data: Ticket configuration with subject, description, priority, etc.
+
+OUTPUT:
+- Creates a single test ticket with subscription fulfillment details
+- Console output showing creation results
+- Detailed response information if successful
+
+TICKET CREATION PROCESS:
+- Creates ticket with priority 1 (Low) and status 2 (Open)
+- Uses specific format for item quantities (I:X159685 Q:1, etc.)
+- Assigns to specified email address as requester
+- Includes rate limit handling with retry logic
+
+ERROR HANDLING:
+- Handles HTTP 429 (rate limit) errors with automatic retry
+- Handles network and connection errors
+- Validates API responses and displays error details
+
+RATE LIMIT HANDLING:
+- Automatically detects rate limit responses (HTTP 429)
+- Waits for the specified retry-after period
+- Retries failed requests with exponential backoff
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has ticket creation permissions
+- Check Freshdesk domain is correct
+- Ensure network connectivity to Freshdesk API
+- Check that requester email is valid
+- Monitor rate limit usage in Freshdesk dashboard
+
+USAGE SCENARIOS:
+- Create test tickets for subscription workflow testing
+- Generate sample data for training and demonstration
+- Test automation workflows with specific ticket formats
+- Validate ticket creation processes and permissions
+"""
+
+import requests
 import json
 import time
 

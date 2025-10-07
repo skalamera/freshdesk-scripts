@@ -1,4 +1,80 @@
-﻿import requests
+"""
+Freshdesk Internal Checkbox Updater Script
+
+DESCRIPTION:
+This script updates a large list of Freshdesk tickets by setting the 'cf_internal'
+custom field to True. It processes tickets in batch with proper error handling
+and logging for bulk internal ticket flagging operations.
+
+REQUIREMENTS:
+- Python 3.x
+- requests library (install with: pip install requests)
+- Valid Freshdesk API key with ticket write permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace api_key with your actual Freshdesk API key
+2. Replace domain with your Freshdesk domain (e.g., 'yourcompany.freshdesk.com')
+3. Update ticket_ids list with the ticket IDs you want to update
+4. Ensure your API key has permissions for ticket updates
+5. Run the script: python internal_checkbox_updater.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Tickets API: https://developers.freshdesk.com/api/#update_ticket
+- Authentication: Basic Auth with API key
+- Rate Limits: 50 requests per minute for most endpoints
+
+INPUT PARAMETERS:
+- api_key: Your Freshdesk API key
+- domain: Your Freshdesk domain
+- ticket_ids: List of ticket IDs to update with internal flag
+- custom_field_name: Name of the custom field to update ('cf_internal')
+
+OUTPUT:
+- Updates tickets with cf_internal set to True
+- Console output showing success/failure for each ticket
+- No file output - results displayed in console only
+
+TICKET UPDATE PROCESS:
+- Sets custom_fields.cf_internal to True for each ticket
+- Processes tickets sequentially (no batching)
+- Updates one ticket at a time to avoid rate limits
+- Displays success/failure status for each operation
+
+ERROR HANDLING:
+- Handles HTTP 404 (ticket not found) errors
+- Handles HTTP 429 (rate limit) errors
+- Handles network and parsing errors
+- Displays detailed error messages for troubleshooting
+- Continues processing even if individual tickets fail
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has ticket update permissions
+- Check that ticket IDs in the list are valid
+- Ensure network connectivity to Freshdesk API
+- Monitor rate limit usage in Freshdesk dashboard
+- Verify that 'cf_internal' custom field exists
+
+PERFORMANCE CONSIDERATIONS:
+- Processes tickets sequentially (no concurrency)
+- Large ticket lists may take significant time to process
+- Consider breaking large lists into smaller batches if needed
+- Rate limits may cause delays in processing
+
+USAGE SCENARIOS:
+- Bulk flag tickets as internal for reporting purposes
+- Mark tickets for internal review or processing
+- Data cleanup and categorization operations
+- Compliance and audit trail maintenance
+"""
+
+import requests
 
 # API key and domain
 api_key = '5TMgbcZdRFY70hSpEdj'
