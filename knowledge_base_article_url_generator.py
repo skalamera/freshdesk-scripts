@@ -1,4 +1,80 @@
-﻿import requests
+﻿"""
+Freshdesk Knowledge Base Article URL Generator
+
+DESCRIPTION:
+This script retrieves all articles from specified folders in the Freshdesk
+knowledge base and generates direct URLs for each article. The results are
+exported to an Excel file for easy access and reference purposes.
+
+REQUIREMENTS:
+- Python 3.x
+- requests library (install with: pip install requests)
+- pandas library (install with: pip install pandas)
+- Valid Freshdesk API key with solutions read permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace API_KEY with your actual Freshdesk API key
+2. Replace DOMAIN with your Freshdesk domain (e.g., 'yourcompany.freshdesk.com')
+3. Update folder_ids list with your folder IDs
+4. Update OUTPUT_URL_PREFIX if your URL structure is different
+5. Ensure your API key has permissions for solutions access
+6. Run the script: python get_article_url.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Solutions API: https://developers.freshdesk.com/api/#solutions
+- Authentication: Basic Auth with API key
+
+INPUT PARAMETERS:
+- API_KEY: Your Freshdesk API key
+- DOMAIN: Your Freshdesk domain
+- folder_ids: List of folder IDs to process
+- OUTPUT_URL_PREFIX: Base URL for article links
+
+OUTPUT:
+- Excel file with article names and direct URLs
+- Console output showing processing progress
+- Error messages for failed folder processing
+
+ARTICLE DATA INCLUDES:
+- Article ID from Freshdesk
+- Article title/name
+- Direct URL for easy access
+- Processing status for each folder
+
+ERROR HANDLING:
+- Handles HTTP 404 (folder not found) errors
+- Handles HTTP 429 (rate limit) errors with automatic retry
+- Handles network and parsing errors
+- Continues processing even if individual folders fail
+
+RATE LIMIT HANDLING:
+- Automatically detects rate limit responses (HTTP 429)
+- Waits for the specified retry-after period
+- Continues processing remaining folders after rate limit delay
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has solutions read permissions
+- Check that folder IDs are valid
+- Ensure network connectivity to Freshdesk API
+- Monitor rate limit usage in Freshdesk dashboard
+- Check that folders contain articles
+
+USAGE SCENARIOS:
+- Generate quick reference lists for knowledge base articles
+- Create documentation indexes with direct links
+- Share article collections with team members
+- Build internal knowledge base navigation aids
+- Support content management and organization
+"""
+
+import requests
 import time
 import pandas as pd
 import base64

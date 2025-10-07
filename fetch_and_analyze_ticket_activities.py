@@ -1,4 +1,79 @@
-﻿import requests
+﻿"""
+Freshdesk Ticket Activities SLA Analysis Script
+
+DESCRIPTION:
+This script analyzes ticket activities and SLA (Service Level Agreement) policy
+application for specific tickets in Freshdesk. It compares which SLA policies
+should have been applied versus which ones were actually applied, providing
+insights into SLA policy configuration and application accuracy.
+
+REQUIREMENTS:
+- Python 3.x
+- requests library (install with: pip install requests)
+- Valid Freshdesk API key with ticket and SLA policy read permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace API_KEY with your actual Freshdesk API key
+2. Replace DOMAIN with your Freshdesk domain (e.g., 'yourcompany.freshdesk.com')
+3. Update ticket_id in main() function with the ticket you want to analyze
+4. Ensure your API key has permissions for ticket and SLA policy access
+5. Run the script: python fetch_and_analyze_ticket_activities.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Tickets API: https://developers.freshdesk.com/api/#tickets
+- SLA Policies API: https://developers.freshdesk.com/api/#sla_policies
+- Authentication: Basic Auth with API key
+
+INPUT PARAMETERS:
+- API_KEY: Your Freshdesk API key
+- DOMAIN: Your Freshdesk domain
+- ticket_id: ID of the ticket to analyze
+
+OUTPUT:
+- Console output showing SLA policy matching results
+- Log file with detailed operation information
+- Analysis of which SLA policy should apply to the ticket
+
+SLA POLICY ANALYSIS:
+- Matches tickets to SLA policies based on group_id and ticket type
+- Checks if ticket.group_id is in policy.applicable_to.group_ids
+- Checks if ticket.type is in policy.applicable_to.ticket_types
+- Identifies discrepancies between expected and actual policy application
+
+ERROR HANDLING:
+- Handles HTTP 404 (ticket/policy not found) errors
+- Handles HTTP 429 (rate limit) errors with automatic retry
+- Handles network and parsing errors
+- Validates API responses and data structure
+
+RATE LIMIT HANDLING:
+- Automatically detects rate limit responses (HTTP 429)
+- Waits for the specified retry-after period
+- Continues processing after rate limit delay
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has ticket and SLA policy read permissions
+- Check that the ticket and SLA policies exist
+- Ensure network connectivity to Freshdesk API
+- Monitor rate limit usage in Freshdesk dashboard
+- Check log file for detailed error information
+
+USAGE SCENARIOS:
+- Debug SLA policy application issues
+- Validate SLA policy configurations
+- Analyze SLA policy coverage for different ticket types
+- Identify tickets that may need SLA policy reassignment
+- Generate SLA compliance reports
+"""
+
+import requests
 import json
 import logging
 

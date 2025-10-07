@@ -1,4 +1,79 @@
-﻿import requests
+﻿"""
+Freshdesk Associated Tickets State and District Analysis
+
+DESCRIPTION:
+This script processes a large list of tracker ticket IDs and retrieves their
+associated tickets, extracting state and district information from company data.
+The results are exported to an Excel file for geographic analysis and reporting.
+
+REQUIREMENTS:
+- Python 3.x
+- requests library (install with: pip install requests)
+- pandas library (install with: pip install pandas)
+- Valid Freshdesk API key with ticket and company read permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace API_KEY with your actual Freshdesk API key
+2. Replace FRESHDESK_DOMAIN with your Freshdesk domain
+3. Update tracker_ticket_ids list with your tracker ticket IDs
+4. Ensure your API key has permissions for ticket and company access
+5. Run the script: python get_associated_tix.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Tickets API: https://developers.freshdesk.com/api/#tickets
+- Companies API: https://developers.freshdesk.com/api/#companies
+- Authentication: Basic Auth with API key
+
+INPUT PARAMETERS:
+- API_KEY: Your Freshdesk API key
+- FRESHDESK_DOMAIN: Your Freshdesk domain
+- tracker_ticket_ids: List of tracker ticket IDs to process
+
+OUTPUT:
+- Excel file with tracker tickets and associated ticket information
+- State and district data for geographic analysis
+- Console output showing processing progress
+
+TICKET ANALYSIS INCLUDES:
+- Tracker ticket ID and associated ticket IDs
+- State information from company records
+- District information from ticket custom fields
+- Processing status for each tracker ticket
+
+ERROR HANDLING:
+- Handles HTTP 404 (ticket/company not found) errors
+- Handles HTTP 429 (rate limit) errors with automatic retry
+- Handles network and parsing errors
+- Continues processing even if individual tickets fail
+
+RATE LIMIT HANDLING:
+- Includes 0.1-second delays between requests
+- Handles rate limit responses with retry-after delays
+- Monitors API usage to avoid exceeding limits
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has ticket and company read permissions
+- Check that tracker ticket IDs are valid
+- Ensure network connectivity to Freshdesk API
+- Monitor rate limit usage in Freshdesk dashboard
+- Check that tickets have associated tickets and companies
+
+USAGE SCENARIOS:
+- Analyze geographic distribution of support tickets
+- Generate regional reports for management
+- Identify ticket patterns by state/district
+- Support resource allocation planning
+- Track support coverage across regions
+"""
+
+import requests
 import time
 import pandas as pd
 

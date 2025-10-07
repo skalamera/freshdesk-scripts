@@ -1,4 +1,82 @@
-﻿import requests
+﻿"""
+Freshdesk Ticket with Attachment Creation Script
+
+DESCRIPTION:
+This script creates a new tracker ticket in Freshdesk and immediately adds an
+attachment to it as a private note. This workflow is useful for creating tickets
+with supporting documentation or evidence files from the initial creation.
+
+REQUIREMENTS:
+- Python 3.x
+- requests library (install with: pip install requests)
+- Valid Freshdesk API key with ticket and conversation write permissions
+- Freshdesk account and domain access
+- Valid attachment file path
+
+SETUP INSTRUCTIONS:
+1. Replace API_KEY with your actual Freshdesk API key
+2. Replace DOMAIN with your Freshdesk domain (e.g., 'yourcompany.freshdesk.com')
+3. Update RELATED_TICKET_ID with the ticket to link as a related ticket
+4. Update ATTACHMENT_PATH with the path to your attachment file
+5. Ensure your API key has permissions for ticket and conversation access
+6. Run the script: python create_ticket_with_attach.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Tickets API: https://developers.freshdesk.com/api/#create_ticket
+- Conversations API: https://developers.freshdesk.com/api/#create_conversation
+- Authentication: Basic Auth with API key
+
+INPUT PARAMETERS:
+- API_KEY: Your Freshdesk API key
+- DOMAIN: Your Freshdesk domain
+- RELATED_TICKET_ID: ID of the ticket to associate with the new tracker
+- ATTACHMENT_PATH: Local file path to the attachment file
+
+OUTPUT:
+- Creates a new tracker ticket linked to the related ticket
+- Adds attachment as a private note to the tracker ticket
+- Console output showing success/failure for each step
+
+TICKET CREATION PROCESS:
+1. Creates tracker ticket with related_ticket_ids array
+2. Retrieves the new ticket ID from the creation response
+3. Creates a private note with the attachment file
+4. Associates the attachment with the newly created ticket
+
+ATTACHMENT PROCESS:
+- Supports various file types (images, documents, etc.)
+- Uses multipart/form-data for file upload
+- Creates private notes (visible only to agents)
+- Validates file exists before attempting upload
+
+ERROR HANDLING:
+- Validates attachment file exists before upload
+- Handles HTTP 429 (rate limit) errors
+- Handles network and file access errors
+- Displays detailed error information for troubleshooting
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has ticket and conversation write permissions
+- Check that attachment file exists and is readable
+- Ensure network connectivity to Freshdesk API
+- Check that related ticket ID is valid and accessible
+- Monitor rate limit usage in Freshdesk dashboard
+
+USAGE SCENARIOS:
+- Create tracker tickets with supporting documentation
+- Attach screenshots for bug reports or issue documentation
+- Upload reference documents to support tickets
+- Document issues with visual or file-based evidence
+- Automated evidence collection for incident management
+"""
+
+import requests
 import json
 
 # Freshdesk API Details

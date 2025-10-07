@@ -1,4 +1,80 @@
-﻿import requests
+﻿"""
+Freshdesk Automation Rule Creation Script
+
+DESCRIPTION:
+This script creates a time-triggered automation rule in Freshdesk that assigns
+unassigned tickets to appropriate regional groups based on the company's state
+information. The automation runs daily and processes tickets based on their
+creation time and status.
+
+REQUIREMENTS:
+- Python 3.x
+- requests library (install with: pip install requests)
+- Valid Freshdesk API key with automation rules write permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace api_key with your actual Freshdesk API key
+2. Replace domain with your Freshdesk domain (e.g., 'yourcompany.freshdesk.com')
+3. Update region_to_group mapping with your actual group IDs
+4. Update automation conditions and actions as needed
+5. Ensure your API key has permissions for automation rules creation
+6. Run the script: python fd_automation_import.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Automation Rules API: https://developers.freshdesk.com/api/#automation_rules
+- Authentication: Basic Auth with API key
+
+INPUT PARAMETERS:
+- api_key: Your Freshdesk API key
+- domain: Your Freshdesk domain
+- automation_type_id: Type of automation (3 = Time-triggered)
+- region_to_group: Mapping of regions to group IDs
+
+OUTPUT:
+- Creates a time-triggered automation rule
+- Console output showing success/failure status
+- Detailed response information if creation fails
+
+AUTOMATION RULE DETAILS:
+- Type: Time-triggered automation (runs at 8 AM daily)
+- Triggers on tickets created within the last day
+- Filters for tickets with 'Unassigned' status (ID: 2)
+- Assigns tickets to regional groups based on company state
+- Updates region custom field for each ticket
+
+REGION MAPPING:
+- Maps US states to regional groups (Central Southeast, Central Southwest, Northeast, West)
+- Handles international and DoDEA (Department of Defense Education Activity) cases
+- Assigns unmapped states to Northeast region as default
+
+ERROR HANDLING:
+- Handles HTTP errors with descriptive messages
+- Validates API responses and data structure
+- Displays detailed error information for troubleshooting
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has automation rules write permissions
+- Check that group IDs in mapping are correct
+- Ensure network connectivity to Freshdesk API
+- Verify that automation type ID is valid
+- Check that required custom fields exist
+
+USAGE SCENARIOS:
+- Automate ticket assignment based on geographic regions
+- Implement consistent regional routing for support tickets
+- Reduce manual ticket assignment workload
+- Ensure proper ticket distribution across regional teams
+- Maintain service level agreements by region
+"""
+
+import requests
 import json
 
 api_key = '5TMgbcZdRFY70hSpEdj'

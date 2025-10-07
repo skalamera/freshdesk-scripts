@@ -1,4 +1,78 @@
-﻿import requests
+﻿"""
+Freshdesk Company and Ticket Creation Script
+
+DESCRIPTION:
+This script creates a new company in Freshdesk (or uses an existing one if it
+already exists) and associates a requester with that company. It then creates a
+ticket for that company using the associated requester. This workflow is useful
+for automated ticket creation with proper company and requester relationships.
+
+REQUIREMENTS:
+- Python 3.x
+- requests library (install with: pip install requests)
+- Valid Freshdesk API key with company, contact, and ticket creation permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace api_key with your actual Freshdesk API key
+2. Replace sandbox_domain with your Freshdesk domain (e.g., 'yourcompany.freshdesk.com')
+3. Update test_unique_external_id, company_name, ticket_subject, and ticket_description
+4. Ensure your API key has permissions for company, contact, and ticket creation
+5. Run the script: python create_company_ticket.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Companies API: https://developers.freshdesk.com/api/#companies
+- Contacts API: https://developers.freshdesk.com/api/#contacts
+- Tickets API: https://developers.freshdesk.com/api/#tickets
+- Authentication: Basic Auth with API key
+
+INPUT PARAMETERS:
+- api_key: Your Freshdesk API key
+- sandbox_domain: Your Freshdesk domain
+- test_unique_external_id: Unique identifier for the requester
+- company_name: Name of the company to create/find
+- ticket_subject: Subject line for the new ticket
+- ticket_description: Description content for the new ticket
+
+OUTPUT:
+- Creates company (or finds existing one)
+- Creates/associates requester with company
+- Creates ticket with company and requester associations
+- Console output showing success/failure for each step
+
+WORKFLOW PROCESS:
+1. Company Creation: Creates new company or handles duplicate company errors
+2. Requester Association: Searches for existing requester or creates new one
+3. Ticket Creation: Creates ticket with proper company and requester relationships
+
+ERROR HANDLING:
+- Handles HTTP 409 (duplicate company) errors with graceful fallback
+- Handles HTTP 404 (requester not found) errors by creating new requester
+- Handles network and parsing errors
+- Validates API responses and data structure
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has company, contact, and ticket creation permissions
+- Check that unique_external_id is unique across all contacts
+- Ensure network connectivity to Freshdesk API
+- Monitor rate limit usage in Freshdesk dashboard
+- Check that company and contact fields are valid
+
+USAGE SCENARIOS:
+- Automated ticket creation for new customers
+- Bulk ticket creation with company associations
+- Testing company and contact workflows
+- Integration with external systems for ticket creation
+- Customer onboarding automation
+"""
+
+import requests
 import json
 
 # Define API credentials and endpoints

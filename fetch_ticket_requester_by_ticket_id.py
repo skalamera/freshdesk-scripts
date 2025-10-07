@@ -1,4 +1,79 @@
-﻿import requests
+﻿"""
+Freshdesk Ticket Requesters Data Export Script
+
+DESCRIPTION:
+This script retrieves requester information for a list of specific tickets in
+Freshdesk and exports the data to a CSV file. It processes tickets in batches
+with proper rate limiting and error handling for reliable data collection.
+
+REQUIREMENTS:
+- Python 3.x
+- requests library (install with: pip install requests)
+- Valid Freshdesk API key with ticket read permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace API_KEY with your actual Freshdesk API key
+2. Replace DOMAIN with your Freshdesk domain (e.g., 'yourcompany.freshdesk.com')
+3. Update TICKET_IDS list with the ticket IDs you want to analyze
+4. Update CSV_FILE name if desired
+5. Ensure your API key has permissions for ticket access
+6. Run the script: python fetch_ticket_requesters.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Tickets API: https://developers.freshdesk.com/api/#tickets
+- Authentication: Basic Auth with API key
+
+INPUT PARAMETERS:
+- API_KEY: Your Freshdesk API key
+- DOMAIN: Your Freshdesk domain
+- TICKET_IDS: List of ticket IDs to process
+- CSV_FILE: Output CSV file name
+
+OUTPUT:
+- CSV file with ticket requester information
+- Console output showing processing progress
+- Detailed error messages for failed lookups
+
+REQUESTER DATA INCLUDES:
+- Ticket ID for reference
+- Requester name from ticket data
+- Requester email address
+- Processing status for each ticket
+
+ERROR HANDLING:
+- Handles HTTP 404 (ticket not found) errors
+- Handles HTTP 429 (rate limit) errors with automatic retry
+- Handles network and parsing errors
+- Continues processing even if individual tickets fail
+
+RATE LIMIT HANDLING:
+- Monitors rate limit headers and adjusts timing
+- Includes delays between requests to respect limits
+- Handles rate limit responses with retry-after delays
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has ticket read permissions
+- Check that ticket IDs are valid
+- Ensure network connectivity to Freshdesk API
+- Monitor rate limit usage in Freshdesk dashboard
+- Check that tickets have associated requesters
+
+USAGE SCENARIOS:
+- Generate requester contact lists for specific tickets
+- Analyze ticket patterns by requester
+- Create mailing lists for ticket follow-ups
+- Generate reports for customer communication
+- Support workflow analysis and user behavior studies
+"""
+
+import requests
 import csv
 import time
 import logging

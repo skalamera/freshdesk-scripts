@@ -5,6 +5,7 @@ DESCRIPTION:
 This script retrieves and analyzes SLA (Service Level Agreement) policies from
 Freshdesk, focusing on default policies. It displays detailed information about
 response times, resolution targets, escalation rules, and agent assignments.
+The script also provides an interactive interface for exporting policy data.
 
 REQUIREMENTS:
 - Python 3.x
@@ -34,6 +35,7 @@ OUTPUT:
 - Information about response and resolution targets
 - Escalation rules and agent assignments
 - Timestamps for creation and updates
+- Optional JSON export file for backup/analysis
 
 SLA POLICY DATA INCLUDES:
 - Policy name and description

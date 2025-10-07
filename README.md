@@ -1,36 +1,101 @@
-## Freshdesk Scripts Consolidation
+## Freshdesk Scripts Collection
 
-This folder contains curated Python scripts for interacting with the Freshdesk API. The following consolidation was performed:
+A comprehensive collection of Python scripts for automating Freshdesk operations, data analysis, and workflow management.
 
-- Removed scripts containing OpenAI keys and usages: `ticket_details_actions.py`, `get_conversations_with_chatgpt.py`
-- Removed redundant or duplicate scripts: `merge_id_copy.py`, `delete_contacts2.py`, `fetch_ticket_activities.py`
+### 📋 Script Categories
 
-All scripts that previously had hardcoded Freshdesk API keys were updated to use the provided key: `5TMgbcZdRFY70hSpEdj`.
+#### 🎫 Ticket Management
+- **`create_ticket.py`** - Creates new support tickets with customizable parameters
+- **`create_test_ticket.py`** - Generates test tickets for development and testing
+- **`create_ticket_with_attach.py`** - Creates tickets and immediately adds file attachments
+- **`multi_ticket_create.py`** - Bulk creation of tickets for testing scenarios
+- **`test_sub_ticket_creation.py`** - Creates subscription fulfillment test tickets
+- **`update_ticket_status.py`** - Updates ticket status values in bulk
+- **`update_ticket_with_attach.py`** - Adds attachments to existing tickets
+- **`fd_ticket_updater.py`** - GUI tool for bulk ticket field updates
+- **`internal_checkbox_updater.py`** - Sets internal flags on multiple tickets
+- **`delete_conversation.py`** - Removes all conversations from a ticket
+- **`link_to_tracker.py`** - Links tickets to tracker tickets for organization
 
-### Grouped Use Cases (kept scripts)
+#### 📊 Data Retrieval & Analytics
+- **`single_ticket_details_retriever.py`** - Retrieves comprehensive ticket information
+- **`ticket_descriptions_exporter.py`** - Extracts ticket descriptions and metadata
+- **`ticket_qa_tagger.py`** - Fetches ticket conversation history and adds QA tags
+- **`agent_ticket_activities_analyzer.py`** - Analyzes ticket activity and timeline
+- **`fetch_and_analyze_ticket_activities.py`** - SLA policy application analysis
+- **`fetch_ticket_requesters.py`** - Extracts requester information from tickets
+- **`fetch_ticket_ids.py`** - Retrieves ticket IDs for processing
+- **`related_tickets_by_hour.py`** - Analyzes ticket creation patterns by hour
+- **`fetch_related_tickets.py`** - Exports tracker and associated ticket data
+- **`ticket_creation_time_analyzer.py`** - Analyzes ticket creation time patterns
 
-- Ticket creation and updates: `create_ticket.py`, `create_test_ticket.py`, `create_ticket_with_attach.py`, `update_ticket_with_attach.py`, `update_ticket_status.py`, `fd_ticket_updater.py`, `match_sla_policy.py`, `internal_checkbox_updater.py`, `region_updater.py`, `multi_ticket_create.py`, `create_company_ticket.py`, `delete_conversation.py`, `link_to_tracker.py`, `test_sub_ticket_creation.py`
+#### 🔗 Associations & Relationships
+- **`associated_tickets_state_district_analyzer.py`** - Retrieves associated tickets with state/district data
+- **`prime_associations_retriever.py`** - Finds primary ticket associations
+- **`prime_association_tags_extractor.py`** - Extracts tags from prime associated tickets
+- **`ticket_tags_filter.py`** - Retrieves ticket tags and categorization
+- **`add_tags.py`** - Adds QA tags to tickets for organization
+- **`ticket_tag_manager.py`** - GUI tool for adding/removing any tags from tickets
+- **`agent_responder_ids_retriever.py`** - Identifies ticket responders and assignments
+- **`assigned_agent.py`** - Analyzes agent assignment patterns
 
-- Ticket retrieval, conversations, and analytics: `get_ticket_details.py`, `get_ticket_desc.py`, `get_conversations.py`, `get_ticket_activities.py`, `fetch_and_analyze_ticket_activities.py`, `fetch_ticket_requesters.py`, `fetch_ticket_ids.py`, `related_tickets_by_hour.py`, `fetch_related_tickets.py`, `get_createdat_hourofday.py`
+#### 🏢 Company & Contact Management
+- **`fd_contact_and_domain_manager.py`** - Manages contacts and domain relationships
+- **`contacts_with_tickets.py`** - Finds contacts associated with tickets
+- **`company_name_to_id_mapper.py`** - Maps company names to IDs using fuzzy matching
+- **`delete_contacts.py`** - Removes contact records from Freshdesk
+- **`create_company_ticket.py`** - Creates companies and associated tickets
 
-- Associations, tags, and relationships: `get_associated_tix.py`, `get_prime_association.py`, `get_prime_assoc_tags.py`, `get_tags.py`, `add_tags.py`, `get_responder_id.py`, `assigned_agent.py`
+#### 🤖 Automation & Workflow
+- **`fd_automation_import.py`** - Creates time-triggered automation rules
+- **`List_All_Automations.py`** - GUI tool for exporting automation rules
+- **`match_sla_policy.py`** - Tests SLA policy application to tickets
+- **`export_sla_policies.py`** - Analyzes and exports SLA policy configurations
+- **`fetch_sla_policies_to_excel.py`** - Exports SLA policies to Excel format
+- **`fetch_sla_policies_with_reminders.py`** - Retrieves SLA policies with reminder settings
+- **`region_updater.py`** - GUI tool for updating ticket regions and account managers
+- **`unmerge_and_assign.py`** - Unmerges tickets and assigns to regional groups
+- **`vip_companies_exporter.py`** - Exports VIP company information to CSV
 
-- Contacts/companies and domain management: `fd_contact_and_domain_manager.py`, `contacts_with_tickets.py`, `get_companyid.py`, `delete_contacts.py`, `create_company_ticket.py`
+#### 📚 Knowledge Base & Content
+- **`knowledge_base_article_url_generator.py`** - Generates direct URLs for knowledge base articles
+- **`knowledge_base_articles_exporter.py`** - Exports all knowledge base articles with cleaned content
 
-- Merging/unmerging and linkage: `merge_id.py`, `unmerge_and_assign.py`, `celigo_merged.py`
+#### 🛠️ Utilities & Tools
+- **`merge_id.py`** - Merges duplicate tickets or data
+- **`add_district.py`** - GUI tool for adding district dropdown values
+- **`add_choices_district_dropdown.py`** - Adds choices to district custom fields
+- **`agent_information_retriever.py`** - Retrieves agent information and IDs
+- **`fd_data_export.py`** - Downloads scheduled Freshdesk data export files
+- **`fd_job_status.py`** - Checks status of scheduled export jobs
+- **`export_ticket_info.py`** - Exports ticket information for reporting
 
-- SLA policies: `export_sla_policies.py`, `fetch_sla_policies_to_excel.py`, `fetch_sla_policies_with_reminders.py`
+#### 🧪 Testing & Development
+- **`sandbox.py`** - Development sandbox for testing API configurations
 
-- Data export and reporting: `fd_data_export.py`, `fd_job_status.py`, `fd_automation_import.py`, `List_All_Automations.py`, `get_article_url.py`, `get_articles.py`, `URL Extractor/app_exe.py`
+### 🚀 Getting Started
 
-- District/region automation: `add_district.py`, `add_choices_district_dropdown.py`, `update_districts_delimited.py`, `district_auto_update.py`, `region_updater.py`, `get_vip_districts.py`
+1. **Setup**: Scripts are currently configured with the Support Ops API key and benchmarkeducationcompany domain - update these in each script as needed
+2. **Permissions**: Ensure your API key has appropriate permissions for each operation. Your FD account will need an Admin role
+3. **Installation**: Install required libraries using `pip install -r requirements.txt`
+4. **Usage**: Run scripts with `python script_name.py`
 
-- Sandbox/test: `sandbox.py`
+### 📚 Documentation
 
-### Notes
+Each script includes comprehensive documentation with:
+- Detailed descriptions and use cases
+- Setup instructions and requirements
+- API documentation references
+- Error handling and troubleshooting
+- Security considerations
 
-- Client utilities remain embedded in each script as requested (no shared module).
-- Scripts that heavily overlapped were pruned to reduce duplication while preserving functionality in the remaining scripts.
-- If you want further consolidation (e.g., merging conversation/ticket activity analysis), we can extend the surviving script(s) with flags/parameters.
+### 🔧 Requirements
+
+- Python 3.x
+- Required libraries: requests, pandas, openpyxl, tkinter (for GUI scripts)
+- Valid Freshdesk API credentials
+- Appropriate API permissions for each operation (Admin)
+
+
 
 
