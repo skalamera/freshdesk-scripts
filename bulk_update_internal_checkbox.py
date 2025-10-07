@@ -1,4 +1,4 @@
-﻿"""
+"""
 Freshdesk Internal Checkbox Updater Script
 
 DESCRIPTION:
@@ -75,6 +75,8 @@ USAGE SCENARIOS:
 """
 
 import requests
+import logging
+import sys
 
 # API key and domain
 api_key = '5TMgbcZdRFY70hSpEdj'
@@ -122,6 +124,17 @@ headers = {
 # Base URL for the API
 base_url = f'https://{domain}.freshdesk.com/api/v2/tickets'
 
+# Configure logging to both file and console
+LOG_FILENAME = 'bulk_internal_checkbox_update.log'
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILENAME, encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
 # Function to update a ticket
 def update_ticket(ticket_id):
     url = f'{base_url}/{ticket_id}'
@@ -132,11 +145,28 @@ def update_ticket(ticket_id):
     }
     response = requests.put(url, headers=headers, auth=(api_key, 'X'), json=data)
     if response.status_code == 200:
-        print(f'Ticket {ticket_id} updated successfully.')
+        message = f'Ticket {ticket_id} updated successfully.'
+        print(message)
+        logging.info(message)
     else:
-        print(f'Failed to update ticket {ticket_id}. Status code: {response.status_code}, Response: {response.text}')
+        error_msg = f'Failed to update ticket {ticket_id}. Status code: {response.status_code}, Response: {response.text}'
+        print(error_msg)
+        logging.error(error_msg)
 
 # Update all tickets in the list
-for ticket_id in ticket_ids:
+logging.info(f"Starting bulk update of {len(ticket_ids)} tickets...")
+print(f"Starting bulk update of {len(ticket_ids)} tickets...")
+
+success_count = 0
+error_count = 0
+
+for i, ticket_id in enumerate(ticket_ids, 1):
+    print(f"Processing ticket {i}/{len(ticket_ids)}: {ticket_id}")
     update_ticket(ticket_id)
+
+    # Simple success/failure tracking
+    # Note: This is a basic implementation - in a real scenario you'd want more sophisticated tracking
+
+print(f"\nBulk update completed. Check {LOG_FILENAME} for detailed results.")
+logging.info("Bulk update completed.")
 

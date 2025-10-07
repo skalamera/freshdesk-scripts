@@ -1,4 +1,4 @@
-﻿"""
+"""
 Freshdesk Ticket Tag Filtering Script
 
 DESCRIPTION:
@@ -70,6 +70,8 @@ PERFORMANCE CONSIDERATIONS:
 import requests
 import time
 import os
+import logging
+import sys
 
 # Freshdesk API Configuration
 # TODO: Move these to environment variables for security
@@ -91,6 +93,17 @@ ticket_ids = [
 HEADERS = {
     "Content-Type": "application/json"
 }
+
+# Configure logging to both file and console
+LOG_FILENAME = 'jira_tag_filtering.log'
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILENAME, encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
 def get_filtered_ticket_tags(ticket_id):
     """
@@ -161,10 +174,13 @@ def main():
     print("Starting ticket tag filtering...")
     print(f"Processing {len(ticket_ids)} tickets...")
     print("=" * 60)
+    logging.info("Starting ticket tag filtering...")
+    logging.info(f"Processing {len(ticket_ids)} tickets...")
 
     # Process each ticket
     for i, ticket_id in enumerate(ticket_ids, 1):
         print(f"\nProcessing ticket {i}/{len(ticket_ids)}: ID {ticket_id}")
+        logging.info(f"Processing ticket {i}/{len(ticket_ids)}: ID {ticket_id}")
 
         # Get filtered tags for this ticket
         filtered_tags = get_filtered_ticket_tags(ticket_id)
@@ -172,23 +188,32 @@ def main():
         # Display results
         if isinstance(filtered_tags, list):
             if filtered_tags:
-                print(f"  Filtered tags: {', '.join(filtered_tags)}")
+                message = f"Filtered tags: {', '.join(filtered_tags)}"
+                print(f"  {message}")
+                logging.info(f"Ticket {ticket_id}: {message}")
             else:
-                print("  No matching tags found")
+                message = "No matching tags found"
+                print(f"  {message}")
+                logging.info(f"Ticket {ticket_id}: {message}")
         else:
-            print(f"  Error: {filtered_tags}")
+            error_msg = f"Error: {filtered_tags}"
+            print(f"  {error_msg}")
+            logging.error(f"Ticket {ticket_id}: {error_msg}")
 
         # Small delay between requests to be respectful
         time.sleep(0.1)
 
     print("\n" + "=" * 60)
     print("Tag filtering completed!")
+    logging.info("Tag filtering completed!")
 
     # Summary statistics
     total_tickets = len(ticket_ids)
     tickets_with_tags = sum(1 for ticket_id in ticket_ids
                            if isinstance(get_filtered_ticket_tags(ticket_id), list))
-    print(f"Summary: Processed {total_tickets} tickets")
+    summary_msg = f"Summary: Processed {total_tickets} tickets"
+    print(summary_msg)
+    logging.info(summary_msg)
 
 # Run the script if executed directly
 if __name__ == "__main__":

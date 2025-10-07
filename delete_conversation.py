@@ -1,4 +1,4 @@
-﻿"""
+"""
 Freshdesk Conversation Deletion Script
 
 DESCRIPTION:
@@ -85,22 +85,18 @@ import requests
 import base64
 import time
 import logging
+import sys
 
-# Set up logging
+# Set up logging to both file and console
 log_file = 'delete_conversations_log.txt'
 logging.basicConfig(
-    filename=log_file,
     level=logging.INFO,
-    format='%(asctime)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(log_file, encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
 )
-
-# Also log to console
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(message)s', '%Y-%m-%d %H:%M:%S')
-console_handler.setFormatter(formatter)
-logging.getLogger().addHandler(console_handler)
 
 # Freshdesk API credentials
 api_key = '5TMgbcZdRFY70hSpEdj'
@@ -151,10 +147,14 @@ def delete_conversation(conversation_id):
 
 def delete_all_conversations(ticket_id):
     """Delete all conversations for a given ticket, retrying if necessary."""
+    logging.info(f"Starting deletion of all conversations for ticket {ticket_id}")
+    print(f"Starting deletion of all conversations for ticket {ticket_id}")
+
     while True:
         conversations = get_conversations(ticket_id)
         if not conversations:
             logging.info("No more conversations left to delete or failed to retrieve conversations.")
+            print("No more conversations left to delete or failed to retrieve conversations.")
             break
 
         for conversation in conversations:
@@ -163,6 +163,10 @@ def delete_all_conversations(ticket_id):
             time.sleep(1)  # Add a short delay to avoid overwhelming the API
 
         logging.info("Finished a pass over the conversations. Checking for any remaining...")
+        print("Finished a pass over the conversations. Checking for any remaining...")
+
+    logging.info(f"Conversation deletion completed for ticket {ticket_id}")
+    print(f"Conversation deletion completed for ticket {ticket_id}")
 
 delete_all_conversations(ticket_id)
 

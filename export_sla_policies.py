@@ -1,4 +1,4 @@
-﻿"""
+"""
 Freshdesk SLA Policies Export and Analysis Script
 
 DESCRIPTION:
@@ -76,6 +76,8 @@ PERFORMANCE CONSIDERATIONS:
 import requests
 import json
 import os
+import logging
+import sys
 
 # Freshdesk API Configuration
 # TODO: Move these to environment variables for security
@@ -92,6 +94,17 @@ TARGET_POLICIES = [
     "Default Service Request SLA",
     "Default Incident & End User Request SLA"
 ]
+
+# Configure logging to both file and console
+LOG_FILENAME = 'sla_policies_export.log'
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILENAME, encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
 def get_sla_policies():
     """
@@ -290,6 +303,7 @@ def main():
     print("=" * 60)
     print(f"Target Policies: {', '.join(TARGET_POLICIES)}")
     print("=" * 60)
+    logging.info("Starting Freshdesk SLA Policies Analysis Tool")
 
     # Retrieve all SLA policies
     sla_policies = get_sla_policies()
@@ -299,6 +313,7 @@ def main():
         print("  - API key has SLA policy read permissions")
         print("  - Freshdesk domain is correct")
         print("  - Network connectivity to Freshdesk API")
+        logging.error("Unable to retrieve SLA policies")
         return
 
     # Display detailed policy information
@@ -314,9 +329,11 @@ Export SLA policies to JSON file? (y/n): ").lower().strip()
 
         if export_sla_policies_to_json(sla_policies, filename):
             print(f"✓ SLA policies exported successfully to {filename}")
+            logging.info(f"SLA policies exported successfully to {filename}")
 
     print("\n" + "=" * 60)
     print("SLA Policy Analysis Complete!")
+    logging.info("SLA Policy Analysis Complete!")
 
 # Run the script if executed directly
 if __name__ == "__main__":

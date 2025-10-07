@@ -1,4 +1,4 @@
-﻿"""
+"""
 Freshdesk Ticket to Tracker Association Script
 
 DESCRIPTION:
@@ -67,6 +67,8 @@ USAGE SCENARIOS:
 
 import requests
 import json
+import logging
+import sys
 
 # Freshdesk API details
 API_KEY = "5TMgbcZdRFY70hSpEdj"
@@ -84,6 +86,17 @@ headers = {
     "Content-Type": "application/json"
 }
 
+# Configure logging to both file and console
+LOG_FILENAME = 'ticket_tracker_linking.log'
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILENAME, encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
 # Data payload to associate both tickets
 data = {
     "association_type": 3,  # Ensure the tracker is explicitly defined
@@ -91,6 +104,8 @@ data = {
 }
 
 # Make the request
+logging.info("Making API request to link ticket to tracker...")
+print("Making API request to link ticket to tracker...")
 response = requests.put(
     url,
     auth=(API_KEY, "X"),
@@ -100,9 +115,13 @@ response = requests.put(
 
 # Output the response
 if response.status_code == 200:
-    print("Ticket successfully linked to tracker!")
+    message = "Ticket successfully linked to tracker!"
+    print(message)
     print(response.json())
+    logging.info(message)
 else:
-    print(f"Failed to link ticket. Status Code: {response.status_code}")
+    error_msg = f"Failed to link ticket. Status Code: {response.status_code}"
+    print(error_msg)
     print(response.text)
+    logging.error(error_msg)
 

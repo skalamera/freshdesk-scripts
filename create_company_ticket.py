@@ -1,4 +1,4 @@
-﻿"""
+"""
 Freshdesk Company and Ticket Creation Script
 
 DESCRIPTION:
@@ -74,6 +74,8 @@ USAGE SCENARIOS:
 
 import requests
 import json
+import logging
+import sys
 
 # Define API credentials and endpoints
 api_key = "5TMgbcZdRFY70hSpEdj"
@@ -81,6 +83,17 @@ sandbox_domain = "benchmarkeducationcompanysandbox.freshdesk.com"
 headers = {
     "Content-Type": "application/json"
 }
+
+# Configure logging to both file and console
+LOG_FILENAME = 'company_ticket_creation.log'
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILENAME, encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
 # Function to create a new company
 def create_company(company_name):
@@ -178,19 +191,31 @@ def create_ticket(subject, description, company_id, requester_id):
 
 # Main execution
 if __name__ == "__main__":
+    logging.info("Starting company and ticket creation process...")
+    print("Starting company and ticket creation process...")
+
     company_name = "New New New Company"
     ticket_subject = "New Support Request"
     ticket_description = "Description of the issue or request."
     test_unique_external_id = "newnewnew1234"  # Test unique external ID
 
     # Step 1: Attempt to create the company or use the existing one
+    logging.info("Step 1: Creating/finding company...")
+    print("Step 1: Creating/finding company...")
     company_id = create_company(company_name)
 
     # Step 2: Ensure the requester is associated with the company
     if company_id:
+        logging.info("Step 2: Creating/associating requester...")
+        print("Step 2: Creating/associating requester...")
         requester_id = create_or_associate_requester(test_unique_external_id, company_id)
 
         # Step 3: Create a new ticket for the company using the requester's ID
         if requester_id:
+            logging.info("Step 3: Creating ticket...")
+            print("Step 3: Creating ticket...")
             create_ticket(ticket_subject, ticket_description, company_id, requester_id)
+
+    logging.info("Company and ticket creation process completed.")
+    print("Company and ticket creation process completed.")
 

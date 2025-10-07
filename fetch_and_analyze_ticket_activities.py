@@ -1,4 +1,4 @@
-﻿"""
+"""
 Freshdesk Ticket Activities SLA Analysis Script
 
 DESCRIPTION:
@@ -76,6 +76,7 @@ USAGE SCENARIOS:
 import requests
 import json
 import logging
+import sys
 
 # Configuration
 API_KEY = '5TMgbcZdRFY70hSpEdj'
@@ -83,8 +84,15 @@ DOMAIN = 'benchmarkeducationcompany.freshdesk.com'
 BASE_URL = f'https://{DOMAIN}/api/v2'
 HEADERS = {'Content-Type': 'application/json'}
 
-# Logging setup
-logging.basicConfig(filename='sla_analysis.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Configure logging to both file and console
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('sla_analysis.log', encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
 def get_sla_policies():
     endpoint = f'{BASE_URL}/sla_policies'
@@ -132,13 +140,20 @@ def analyze_sla_application(ticket, sla_policies):
     return None
 
 def main(ticket_id):
+    logging.info(f"Starting SLA analysis for ticket {ticket_id}")
+    print(f"Starting SLA analysis for ticket {ticket_id}")
+
     ticket = get_ticket_details(ticket_id)
     sla_policies = get_sla_policies()
 
     if ticket and sla_policies:
         analyze_sla_application(ticket, sla_policies)
+        logging.info(f"SLA analysis completed for ticket {ticket_id}")
+        print(f"SLA analysis completed for ticket {ticket_id}")
     else:
-        logging.error("Failed to retrieve ticket details or SLA policies.")
+        error_msg = "Failed to retrieve ticket details or SLA policies."
+        logging.error(error_msg)
+        print(error_msg)
 
 if __name__ == '__main__':
     ticket_id = 250128

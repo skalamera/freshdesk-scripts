@@ -1,4 +1,4 @@
-﻿"""
+"""
 Freshdesk Ticket Information Export Script
 
 DESCRIPTION:
@@ -83,6 +83,17 @@ import logging
 import os
 import sys
 from pathlib import Path
+
+# Configure logging to both file and console
+LOG_FILENAME = 'ticket_info_export.log'
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILENAME, encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
 # Configuration
 INPUT_FILENAMES = {
@@ -509,15 +520,18 @@ def main():
     try:
         # Load JSON data
         print("\nLoading input files...")
+        logging.info("Loading input files...")
         tickets_data = load_json_safely(INPUT_FILENAMES['tickets'])
         contacts_data = load_json_safely(INPUT_FILENAMES['contacts'])
 
         if not tickets_data:
             print("❌ No valid tickets data found.")
+            logging.error("No valid tickets data found.")
             return 1
 
         # Analyze data quality
         print("\nAnalyzing data quality...")
+        logging.info("Analyzing data quality...")
         quality_analysis = analyze_data_quality(tickets_data, contacts_data)
 
         print("📊 DATA QUALITY ANALYSIS:")
@@ -532,6 +546,7 @@ def main():
 
         # Normalize and process data
         print("\nProcessing ticket and contact data...")
+        logging.info("Processing ticket and contact data...")
         contacts_list = normalize_contacts_data(contacts_data)
         contacts_lookup = create_contact_lookup(contacts_list)
 
