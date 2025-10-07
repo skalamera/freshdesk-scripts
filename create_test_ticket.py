@@ -1,12 +1,99 @@
-﻿import tkinter as tk
+"""
+Freshdesk Test Ticket Creation GUI
+
+DESCRIPTION:
+This script provides a graphical user interface (GUI) for creating test tickets
+in Freshdesk with company and contact management. It allows users to select
+specific test cases and automatically creates the necessary companies and
+contacts before creating the tickets.
+
+Freshdesk is a cloud-based customer support platform that helps businesses
+manage customer inquiries, support requests, and service tickets through a
+unified interface.
+
+REQUIREMENTS:
+- Python 3.x
+- tkinter (usually included with Python)
+- requests library (install with: pip install requests)
+- Valid Freshdesk API key with ticket, contact, and company creation permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace API_KEY with your actual Freshdesk API key
+2. Replace DOMAIN with your Freshdesk domain (e.g., 'yourcompany.freshdesk.com')
+3. Ensure your API key has permissions for:
+   - Ticket creation and management
+   - Contact creation and management
+   - Company creation and management
+4. Run the script: python create_test_ticket.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Authentication: Basic Auth with API key
+- Rate Limits: 50 requests per minute for most endpoints
+
+FEATURES:
+- Creates or updates companies and contacts as needed
+- Provides GUI for selecting which test cases to run
+- Automatically assigns tickets to specified group and agent
+- Shows results in a popup message box
+- Handles API errors gracefully
+
+INPUT PARAMETERS:
+Company Creation/Update:
+- company_name: Name of the company to create or update
+- state: State field for the company (custom field)
+
+Contact Creation/Update:
+- full_name: Full name of the contact
+- email: Email address of the contact
+- company_id: ID of associated company (optional)
+
+Ticket Creation:
+- subject: Ticket title/subject line
+- description: Detailed description of the issue
+- status: Ticket status (2 = Open, 3 = Pending, 4 = Resolved, 5 = Closed)
+- priority: Priority level (1 = Low, 2 = Medium, 3 = High, 4 = Urgent)
+- requester_id: ID of the contact creating the ticket
+
+OUTPUT:
+- Creates companies, contacts, and tickets as needed
+- Displays results in GUI message box
+- Shows success/failure status for each operation
+
+ERROR HANDLING:
+- Validates contact_id is an integer
+- Handles API errors with descriptive messages
+- Shows popup dialogs for results and errors
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has all necessary permissions
+- Check Freshdesk domain is correct
+- Ensure network connectivity to Freshdesk API
+- Monitor rate limit usage in Freshdesk dashboard
+- Check that custom fields exist in your Freshdesk instance
+"""
+
+import tkinter as tk
 from tkinter import messagebox
 import requests
 import json
+import os
 
-# Configuration
-API_KEY = '5TMgbcZdRFY70hSpEdj'
-DOMAIN = 'benchmarkeducationcompany.freshdesk.com'
-auth = (API_KEY, 'X')  # Use the correct authentication
+# Freshdesk API Configuration
+# TODO: Move these to environment variables for security
+API_KEY = '5TMgbcZdRFY70hSpEdj'  # Replace with your actual API key
+DOMAIN = 'benchmarkeducationcompany.freshdesk.com'  # Replace with your domain
+
+# Authentication tuple for API requests
+auth = (API_KEY, 'X')  # Use the correct authentication format
+
+# HTTP Headers for API requests
 headers = {'Content-Type': 'application/json'}  # Header specifying content type
 
 def create_or_update_company(company_name, state):
