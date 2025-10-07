@@ -207,7 +207,6 @@ def main(ticket_ids=None, tag_to_add='qa', use_gui=False):
     print("=" * 60)
 
     success_count = 0
-    skip_count = 0
     error_count = 0
 
     # Process tickets in batches with rate limiting
@@ -217,8 +216,6 @@ def main(ticket_ids=None, tag_to_add='qa', use_gui=False):
         # Update the ticket
         if update_ticket_tags(ticket_id, tag_to_add):
             success_count += 1
-        elif "already has" in str(logging.getLogger().handlers[0].stream.getvalue()):
-            skip_count += 1
         else:
             error_count += 1
 
@@ -234,11 +231,10 @@ def main(ticket_ids=None, tag_to_add='qa', use_gui=False):
     print("=" * 60)
     print(f"Total tickets processed: {len(ticket_ids)}")
     print(f"Successfully updated: {success_count}")
-    print(f"Already had '{tag_to_add}' tag: {skip_count}")
     print(f"Errors/failures: {error_count}")
     print("=" * 60)
 
-    logging.info(f"Batch update completed. Success: {success_count}, Skipped: {skip_count}, Errors: {error_count}")
+    logging.info(f"Batch update completed. Success: {success_count}, Errors: {error_count}")
 
 def process_tickets_gui(ticket_ids, tag_to_add):
     """
@@ -400,9 +396,8 @@ def update_tag_suggestions(event, tag_var, tag_combo):
         if suggestions:
             tag_combo['values'] = suggestions
 
-# Run GUI if no command line arguments, otherwise run command line mode
+# Run GUI if --gui flag is passed, otherwise run command line mode
 if __name__ == "__main__":
-    import sys
     if len(sys.argv) > 1 and sys.argv[1] == '--gui':
         # GUI mode
         app = create_gui()
