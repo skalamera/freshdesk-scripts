@@ -159,21 +159,21 @@ def update_ticket_tags(ticket_id, tag_to_add='qa'):
             )
 
             if update_response.status_code == 200:
-                logging.info(f"✓ Successfully added '{tag_to_add}' tag to ticket {ticket_id}")
+                logging.info(f"[SUCCESS] Added '{tag_to_add}' tag to ticket {ticket_id}")
                 return True
             else:
-                logging.error(f"✗ Failed to update ticket {ticket_id}: {update_response.status_code} - {update_response.text}")
+                logging.error(f"[ERROR] Failed to update ticket {ticket_id}: {update_response.status_code} - {update_response.text}")
                 return False
 
         elif response.status_code == 404:
-            logging.warning(f"⚠ Ticket {ticket_id} not found (404)")
+            logging.warning(f"[WARNING] Ticket {ticket_id} not found (404)")
             return False
         else:
-            logging.error(f"✗ Error fetching ticket {ticket_id}: {response.status_code} - {response.text}")
+            logging.error(f"[ERROR] Error fetching ticket {ticket_id}: {response.status_code} - {response.text}")
             return False
 
     except requests.exceptions.RequestException as e:
-        logging.error(f"✗ Request error for ticket {ticket_id}: {str(e)}")
+        logging.error(f"[ERROR] Request error for ticket {ticket_id}: {str(e)}")
         return False
 
 def main(ticket_ids=None, tag_to_add='qa', use_gui=False):
@@ -196,7 +196,11 @@ def main(ticket_ids=None, tag_to_add='qa', use_gui=False):
         threading.Thread(target=run_batch_update, daemon=True).start()
         return
 
-    # Command-line mode
+    # Command-line mode only - check if GUI flag was passed
+    if len(sys.argv) > 1 and sys.argv[1] == '--gui':
+        # This shouldn't happen, but just in case
+        return
+
     print("Starting batch ticket tag addition...")
     print(f"Processing {len(ticket_ids)} tickets...")
     print(f"Tag to add: {tag_to_add}")
