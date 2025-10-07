@@ -77,6 +77,10 @@ USAGE SCENARIOS:
 
 import requests
 import time
+import sys
+import tkinter as tk
+from tkinter import ttk, messagebox, scrolledtext
+import threading
 
 # Freshdesk API details
 API_KEY = "5TMgbcZdRFY70hSpEdj"
@@ -163,15 +167,26 @@ def update_ticket_status(ticket_id, old_status, new_status, attempt=1):
 
     return "FAILED"
 
-def main():
+def main(status_mapping=None, use_gui=False):
     """Fetch tickets and update their statuses based on the mapping."""
+    if status_mapping is None:
+        status_mapping = DEFAULT_STATUS_MAPPING
+
+    if use_gui:
+        def run_status_update():
+            process_status_update_gui(status_mapping)
+
+        threading.Thread(target=run_status_update, daemon=True).start()
+        return
+
+    # Command-line mode
     tickets_to_update = get_tickets_with_old_statuses()
 
     if not tickets_to_update:
         print("No tickets need updating.")
         return
 
-    print(f"ðŸŽ¯ Found {len(tickets_to_update)} tickets that need status updates.")
+    print(f"🎯 Found {len(tickets_to_update)} tickets that need status updates.")
 
     success_count = 0
     fail_count = 0
@@ -185,8 +200,275 @@ def main():
 
         time.sleep(0.5)  # Small delay to avoid rate limits
 
-    print(f"\nâœ… Done! {success_count} tickets updated successfully, {fail_count} failed.")
+    print(f"\n✅ Done! {success_count} tickets updated successfully, {fail_count} failed.")
 
+def process_status_update_gui(status_mapping):
+    """Process status updates in GUI mode with progress tracking."""
+    def update_progress(message):
+        progress_var.set(message)
+        log_area.insert(tk.END, message + "\n")
+        log_area.see(tk.END)
+        app.update_idletasks()
+
+    update_progress("Fetching tickets to update...")
+
+    tickets_to_update = get_tickets_with_old_statuses()
+
+    if not tickets_to_update:
+        update_progress("❌ No tickets need updating based on current status mapping.")
+        messagebox.showinfo("No Updates Needed", "No tickets need updating based on current status mapping.")
+        return
+
+    update_progress(f"Found {len(tickets_to_update)} tickets that need status updates.")
+
+    # Show confirmation dialog with preview
+    preview_text = "The following status updates will be made:\n\n"
+    for ticket_id, old_status, new_status in tickets_to_update[:10]:  # Show first 10
+        preview_text += f"Ticket {ticket_id}: Status {old_status} → {new_status}\n"
+
+    if len(tickets_to_update) > 10:
+        preview_text += f"... and {len(tickets_to_update) - 10} more tickets\n"
+
+    preview_text += f"\nTotal: {len(tickets_to_update)} tickets will be updated."
+
+    if not messagebox.askyesno("Confirm Status Updates", preview_text):
+        update_progress("❌ Status update cancelled by user")
+        return
+
+    success_count = 0
+    fail_count = 0
+
+    for i, (ticket_id, old_status, new_status) in enumerate(tickets_to_update, 1):
+        update_progress(f"Updating ticket {i}/{len(tickets_to_update)}: {ticket_id}")
+
+        result = update_ticket_status(ticket_id, old_status, new_status)
+        if result == "SUCCESS":
+            success_count += 1
+        else:
+            fail_count += 1
+
+        time.sleep(0.5)  # Small delay to avoid rate limits
+
+    summary_msg = "\n" + "=" * 50 + "\n"
+    summary_msg += "STATUS UPDATE SUMMARY\n"
+    summary_msg += "=" * 50 + "\n"
+    summary_msg += f"Total tickets processed: {len(tickets_to_update)}\n"
+    summary_msg += f"Successfully updated: {success_count}\n"
+    summary_msg += f"Failed: {fail_count}\n"
+    summary_msg += "=" * 50
+
+    update_progress(summary_msg)
+
+    messagebox.showinfo("Status Update Complete",
+                       f"Updated {success_count} tickets successfully.\n"
+                       f"Failed: {fail_count}")
+
+def create_gui():
+    """Create the graphical user interface."""
+    global status_tree, log_area, progress_var, app
+
+    app = tk.Tk()
+    app.title("Freshdesk Status Updater")
+    app.geometry("600x600")
+
+    # Main frame
+    main_frame = ttk.Frame(app, padding="10")
+    main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+    app.columnconfigure(0, weight=1)
+    app.rowconfigure(0, weight=1)
+    main_frame.columnconfigure(1, weight=1)
+
+    # Title
+    title_label = ttk.Label(main_frame, text="Ticket Status Updater", font=("Arial", 14, "bold"))
+    title_label.grid(row=0, column=0, columnspan=2, pady=10)
+
+    # Instructions
+    instructions = tk.Label(main_frame,
+                           text="Configure status mappings below. Tickets with old status values\n"
+                                "will be updated to the corresponding new status values.",
+                           justify="left", fg="gray")
+    instructions.grid(row=1, column=0, columnspan=2, pady=10)
+
+    # Status mapping section
+    mapping_frame = ttk.LabelFrame(main_frame, text="Status Mapping", padding="10")
+    mapping_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+    mapping_frame.columnconfigure(1, weight=1)
+
+    # Status mapping treeview
+    columns = ("old_status", "new_status")
+    status_tree = ttk.Treeview(mapping_frame, columns=columns, show="headings", height=4)
+    status_tree.heading("old_status", text="Old Status ID")
+    status_tree.heading("new_status", text="New Status ID")
+    status_tree.column("old_status", width=100)
+    status_tree.column("new_status", width=100)
+    status_tree.grid(row=0, column=0, columnspan=2, pady=5)
+
+    # Load default mapping
+    for old_status, new_status in DEFAULT_STATUS_MAPPING.items():
+        status_tree.insert("", tk.END, values=(old_status, new_status))
+
+    # Mapping controls
+    control_frame = ttk.Frame(mapping_frame)
+    control_frame.grid(row=1, column=0, columnspan=2, pady=5)
+
+    def add_mapping():
+        add_window = tk.Toplevel(app)
+        add_window.title("Add Status Mapping")
+        add_window.geometry("300x150")
+
+        ttk.Label(add_window, text="Old Status ID:").grid(row=0, column=0, padx=10, pady=10)
+        old_var = tk.StringVar()
+        old_entry = ttk.Entry(add_window, textvariable=old_var, width=15)
+        old_entry.grid(row=0, column=1, padx=10, pady=10)
+
+        ttk.Label(add_window, text="New Status ID:").grid(row=1, column=0, padx=10, pady=10)
+        new_var = tk.StringVar()
+        new_entry = ttk.Entry(add_window, textvariable=new_var, width=15)
+        new_entry.grid(row=1, column=1, padx=10, pady=10)
+
+        def save_mapping():
+            try:
+                old_id = int(old_var.get())
+                new_id = int(new_var.get())
+
+                # Check if mapping already exists
+                for item in status_tree.get_children():
+                    if status_tree.item(item)["values"][0] == old_id:
+                        messagebox.showerror("Error", f"Mapping for old status {old_id} already exists.")
+                        return
+
+                status_tree.insert("", tk.END, values=(old_id, new_id))
+                add_window.destroy()
+            except ValueError:
+                messagebox.showerror("Error", "Please enter valid numeric status IDs.")
+
+        ttk.Button(add_window, text="Add Mapping", command=save_mapping).grid(row=2, column=0, columnspan=2, pady=10)
+
+    def remove_mapping():
+        selection = status_tree.selection()
+        if not selection:
+            messagebox.showerror("Error", "Please select a mapping to remove.")
+            return
+
+        status_tree.delete(selection[0])
+
+    def clear_mappings():
+        for item in status_tree.get_children():
+            status_tree.delete(item)
+
+    def load_defaults():
+        clear_mappings()
+        for old_status, new_status in DEFAULT_STATUS_MAPPING.items():
+            status_tree.insert("", tk.END, values=(old_status, new_status))
+
+    ttk.Button(control_frame, text="Add", command=add_mapping).grid(row=0, column=0, padx=5)
+    ttk.Button(control_frame, text="Remove", command=remove_mapping).grid(row=0, column=1, padx=5)
+    ttk.Button(control_frame, text="Clear", command=clear_mappings).grid(row=0, column=2, padx=5)
+    ttk.Button(control_frame, text="Load Defaults", command=load_defaults).grid(row=0, column=3, padx=5)
+
+    # Buttons
+    button_frame = ttk.Frame(main_frame)
+    button_frame.grid(row=3, column=0, columnspan=2, pady=10)
+
+    def preview_updates():
+        # Get current mapping from treeview
+        status_mapping = {}
+        for item in status_tree.get_children():
+            values = status_tree.item(item)["values"]
+            status_mapping[values[0]] = values[1]
+
+        if not status_mapping:
+            messagebox.showerror("Error", "Please add at least one status mapping.")
+            return
+
+        # Fetch tickets that would be affected
+        tickets_to_update = get_tickets_with_old_statuses_preview(status_mapping)
+
+        if not tickets_to_update:
+            messagebox.showinfo("Preview", "No tickets would be affected by current status mapping.")
+            return
+
+        preview_text = f"Preview: {len(tickets_to_update)} tickets would be updated:\n\n"
+        for ticket_id, old_status, new_status in tickets_to_update[:10]:
+            preview_text += f"Ticket {ticket_id}: {old_status} → {new_status}\n"
+
+        if len(tickets_to_update) > 10:
+            preview_text += f"... and {len(tickets_to_update) - 10} more tickets"
+
+        messagebox.showinfo("Preview", preview_text)
+
+    def start_updates():
+        # Get current mapping from treeview
+        status_mapping = {}
+        for item in status_tree.get_children():
+            values = status_tree.item(item)["values"]
+            status_mapping[values[0]] = values[1]
+
+        if not status_mapping:
+            messagebox.showerror("Error", "Please add at least one status mapping.")
+            return
+
+        threading.Thread(target=process_status_update_gui, args=(status_mapping,), daemon=True).start()
+
+    ttk.Button(button_frame, text="Preview Updates", command=preview_updates).grid(row=0, column=0, padx=5)
+    ttk.Button(button_frame, text="Update Statuses", command=start_updates).grid(row=0, column=1, padx=5)
+
+    # Progress and log area
+    progress_var = tk.StringVar(value="Ready")
+    ttk.Label(main_frame, textvariable=progress_var).grid(row=4, column=0, columnspan=2, pady=5)
+
+    ttk.Label(main_frame, text="Operation Log:").grid(row=5, column=0, columnspan=2, pady=5)
+    log_area = scrolledtext.ScrolledText(main_frame, height=8, width=60, state=tk.DISABLED)
+    log_area.grid(row=6, column=0, columnspan=2, pady=5)
+
+    return app
+
+def get_tickets_with_old_statuses_preview(status_mapping):
+    """Preview version of get_tickets_with_old_statuses - doesn't modify anything."""
+    tickets_to_update = []
+    page = 1
+
+    while True:
+        response = requests.get(
+            BASE_URL,
+            auth=AUTH,
+            headers=HEADERS,
+            params={"per_page": 50, "page": page}
+        )
+
+        if response.status_code != 200:
+            print(f"❌ Error fetching tickets: {response.status_code} - {response.text}")
+            break
+
+        tickets = response.json()
+        if not tickets:
+            break
+
+        for ticket in tickets:
+            old_status = ticket.get("status")
+            if old_status in status_mapping:
+                tickets_to_update.append((ticket["id"], old_status, status_mapping[old_status]))
+
+        page += 1
+        time.sleep(1)  # Delay to prevent rate limits
+
+        # Limit preview to first 100 tickets to avoid long loading times
+        if page > 2:
+            break
+
+    return tickets_to_update
+
+# Default status mapping
+DEFAULT_STATUS_MAPPING = {
+    21: 8
+}
+
+# Run GUI if --gui flag is passed, otherwise run command line mode
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == '--gui':
+        app = create_gui()
+        app.mainloop()
+    else:
+        main()
 

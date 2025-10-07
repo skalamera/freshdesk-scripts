@@ -82,8 +82,8 @@ import sys
 api_key = '5TMgbcZdRFY70hSpEdj'
 domain = 'benchmarkeducationcompany'
 
-# List of ticket IDs to update
-ticket_ids = [
+# Default list of ticket IDs to update
+DEFAULT_TICKET_IDS = [
     249811, 249855, 249857, 249897, 249904, 249938, 249946, 249964,
     250051, 250052, 250057, 250069, 250081, 250086, 250087, 250098,
     250099, 250114, 250115, 250149, 250172, 250193, 250199, 250200,
@@ -148,31 +148,184 @@ def update_ticket(ticket_id):
         message = f'Ticket {ticket_id} updated successfully.'
         print(message)
         logging.info(message)
+        return True
     else:
         error_msg = f'Failed to update ticket {ticket_id}. Status code: {response.status_code}, Response: {response.text}'
         print(error_msg)
         logging.error(error_msg)
+        return False
+
+import tkinter as tk
+from tkinter import ttk, messagebox, scrolledtext
+import threading
 
 # Update all tickets in the list
-<<<<<<< Current (Your changes)
-for ticket_id in ticket_ids:
-    update_ticket(ticket_id)
+def main(ticket_ids=None, use_gui=False):
+    if ticket_ids is None:
+        ticket_ids = DEFAULT_TICKET_IDS
 
-=======
-logging.info(f"Starting bulk update of {len(ticket_ids)} tickets...")
-print(f"Starting bulk update of {len(ticket_ids)} tickets...")
+    if use_gui:
+        # GUI mode - use threading to keep GUI responsive
+        def run_bulk_update():
+            process_tickets_gui(ticket_ids)
 
-success_count = 0
-error_count = 0
+        threading.Thread(target=run_bulk_update, daemon=True).start()
+        return
 
-for i, ticket_id in enumerate(ticket_ids, 1):
-    print(f"Processing ticket {i}/{len(ticket_ids)}: {ticket_id}")
-    update_ticket(ticket_id)
+    # Command-line mode
+    logging.info(f"Starting bulk update of {len(ticket_ids)} tickets...")
+    print(f"Starting bulk update of {len(ticket_ids)} tickets...")
 
-    # Simple success/failure tracking
-    # Note: This is a basic implementation - in a real scenario you'd want more sophisticated tracking
+    success_count = 0
+    error_count = 0
 
-print(f"\nBulk update completed. Check {LOG_FILENAME} for detailed results.")
-logging.info("Bulk update completed.")
+    for i, ticket_id in enumerate(ticket_ids, 1):
+        print(f"Processing ticket {i}/{len(ticket_ids)}: {ticket_id}")
+        if update_ticket(ticket_id):
+            success_count += 1
+        else:
+            error_count += 1
 
->>>>>>> Incoming (Background Agent changes)
+    print(f"\nBulk update completed. Check {LOG_FILENAME} for detailed results.")
+    print(f"Successfully updated: {success_count}, Failed: {error_count}")
+    logging.info(f"Bulk update completed. Success: {success_count}, Failed: {error_count}")
+
+def process_tickets_gui(ticket_ids):
+    """Process tickets in GUI mode with progress updates."""
+    success_count = 0
+    error_count = 0
+
+    def update_progress(current, total, message=""):
+        progress_var.set(f"Processing: {current}/{total} tickets ({int((current/total)*100)}%)")
+        if message:
+            log_area.insert(tk.END, message + "\n")
+        log_area.see(tk.END)
+        app.update_idletasks()
+
+    update_progress(0, len(ticket_ids), "Starting bulk internal checkbox update...")
+
+    for i, ticket_id in enumerate(ticket_ids, 1):
+        update_progress(i, len(ticket_ids), f"Processing ticket {i}/{len(ticket_ids)}: {ticket_id}")
+
+        if update_ticket(ticket_id):
+            success_count += 1
+        else:
+            error_count += 1
+
+    summary_msg = "\n" + "=" * 50 + "\n"
+    summary_msg += "BULK UPDATE SUMMARY\n"
+    summary_msg += "=" * 50 + "\n"
+    summary_msg += f"Total tickets processed: {len(ticket_ids)}\n"
+    summary_msg += f"Successfully updated: {success_count}\n"
+    summary_msg += f"Failed: {error_count}\n"
+    summary_msg += "=" * 50
+
+    update_progress(len(ticket_ids), len(ticket_ids), summary_msg)
+    logging.info(f"GUI bulk update completed. Success: {success_count}, Failed: {error_count}")
+
+    messagebox.showinfo("Bulk Update Complete",
+                       f"Processed {len(ticket_ids)} tickets.\n"
+                       f"Successfully updated: {success_count}\n"
+                       f"Failed: {error_count}")
+
+def parse_ticket_ids(text_input):
+    """Parse ticket IDs from text input (comma-separated or one per line)."""
+    if not text_input.strip():
+        return []
+
+    ids = []
+    for item in text_input.replace(',', '\n').split('\n'):
+        item = item.strip()
+        if item and item.isdigit():
+            ids.append(int(item))
+
+    return ids
+
+def create_gui():
+    """Create the graphical user interface."""
+    global ticket_ids_text, log_area, progress_var, app
+
+    app = tk.Tk()
+    app.title("Freshdesk Internal Checkbox Updater")
+    app.geometry("600x500")
+
+    # Main frame
+    main_frame = ttk.Frame(app, padding="10")
+    main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+    app.columnconfigure(0, weight=1)
+    app.rowconfigure(0, weight=1)
+    main_frame.columnconfigure(1, weight=1)
+
+    # Title
+    title_label = ttk.Label(main_frame, text="Bulk Internal Checkbox Updater", font=("Arial", 14, "bold"))
+    title_label.grid(row=0, column=0, columnspan=2, pady=10)
+
+    # Instructions
+    instructions = tk.Label(main_frame,
+                           text="This tool will set the 'cf_internal' custom field to True for selected tickets.\n"
+                                "Enter ticket IDs below (one per line or comma-separated).",
+                           justify="left", fg="gray")
+    instructions.grid(row=1, column=0, columnspan=2, pady=10)
+
+    # Ticket IDs input
+    tk.Label(main_frame, text="Ticket IDs (one per line or comma-separated):").grid(row=2, column=0, sticky=tk.W, pady=5)
+
+    ticket_ids_text = tk.Text(main_frame, height=8, width=50)
+    ticket_ids_text.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+
+    # Load sample ticket IDs
+    sample_ids = '\n'.join(map(str, DEFAULT_TICKET_IDS[:10]))
+    ticket_ids_text.insert('1.0', sample_ids)
+    ticket_ids_text.insert(tk.END, '\n... (add more ticket IDs above)')
+
+    # Buttons
+    button_frame = ttk.Frame(main_frame)
+    button_frame.grid(row=4, column=0, columnspan=2, pady=10)
+
+    def start_processing():
+        ticket_input = ticket_ids_text.get('1.0', tk.END).strip()
+        ticket_ids = parse_ticket_ids(ticket_input)
+
+        if not ticket_ids:
+            messagebox.showerror("Error", "Please provide valid ticket IDs (numbers only).")
+            return
+
+        # Confirm before proceeding
+        confirm_msg = f"This will update {len(ticket_ids)} tickets.\n\n"
+        confirm_msg += "The 'cf_internal' field will be set to True for:\n"
+        confirm_msg += ', '.join(map(str, ticket_ids[:5]))
+        if len(ticket_ids) > 5:
+            confirm_msg += f" ... and {len(ticket_ids) - 5} more tickets"
+
+        if not messagebox.askyesno("Confirm Bulk Update", confirm_msg):
+            return
+
+        threading.Thread(target=process_tickets_gui, args=(ticket_ids,), daemon=True).start()
+
+    def clear_form():
+        ticket_ids_text.delete('1.0', tk.END)
+
+    ttk.Button(button_frame, text="Start Bulk Update",
+               command=start_processing).grid(row=0, column=0, padx=5)
+    ttk.Button(button_frame, text="Clear Form",
+               command=clear_form).grid(row=0, column=1, padx=5)
+
+    # Progress and log area
+    progress_var = tk.StringVar(value="Ready")
+    ttk.Label(main_frame, textvariable=progress_var).grid(row=5, column=0, columnspan=2, pady=5)
+
+    ttk.Label(main_frame, text="Operation Log:").grid(row=6, column=0, columnspan=2, pady=5)
+    log_area = scrolledtext.ScrolledText(main_frame, height=8, width=60, state=tk.DISABLED)
+    log_area.grid(row=7, column=0, columnspan=2, pady=5)
+
+    return app
+
+# Run GUI if --gui flag is passed, otherwise run command line mode
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == '--gui':
+        app = create_gui()
+        app.mainloop()
+    else:
+        main()

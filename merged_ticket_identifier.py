@@ -6,6 +6,7 @@ This script analyzes Freshdesk tickets to identify merged tickets by scanning
 conversation bodies for ticket references. It extracts detailed information
 about merged tickets including their status, creation dates, subjects, and tags,
 then exports the results to an Excel file for analysis.
+This script analyzes Freshdesk tickets to identify merged tickets by scanning conversation bodies for ticket references and exports detailed information to Excel
 
 REQUIREMENTS:
 - Python 3.x
