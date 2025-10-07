@@ -81,6 +81,8 @@ import requests
 from datetime import datetime, timedelta, timezone
 import time
 import os
+import logging
+import sys
 
 # Freshdesk API Configuration
 # TODO: Move these to environment variables for security
@@ -95,6 +97,17 @@ AGENT_ID = 67038975154  # Replace with your agent ID
 HEADERS = {
     'Content-Type': 'application/json'
 }
+
+# Configure logging to both file and console
+LOG_FILENAME = 'agent_ticket_activities_analysis.log'
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILENAME, encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
 def get_yesterday_date_range():
     """
@@ -250,21 +263,26 @@ def main():
     """
     print("Freshdesk Agent Activity Analysis")
     print("=" * 50)
+    logging.info("Starting Freshdesk Agent Activity Analysis")
 
     # Get yesterday's date range
     start_date, end_date = get_yesterday_date_range()
     print(f"Analyzing activities for date range: {start_date} to {end_date}")
+    logging.info(f"Analyzing activities for date range: {start_date} to {end_date}")
 
     # Fetch all tickets updated yesterday
     all_tickets = fetch_tickets_with_pagination(start_date, end_date)
+    logging.info(f"Fetched {len(all_tickets)} tickets total")
 
     # Filter tickets assigned to our agent
     agent_tickets = [ticket for ticket in all_tickets if ticket.get('responder_id') == AGENT_ID]
 
     print(f"Tickets assigned to agent {AGENT_ID}: {len(agent_tickets)}")
+    logging.info(f"Tickets assigned to agent {AGENT_ID}: {len(agent_tickets)}")
 
     if not agent_tickets:
         print("No tickets found for the specified agent in the date range.")
+        logging.warning("No tickets found for the specified agent in the date range.")
         return
 
     # Fetch activities for each ticket
@@ -281,11 +299,14 @@ def main():
         filename = 'ticket_activities_yesterday.txt'
         export_activities_to_file(all_activities, filename)
         print(f"\n✓ Successfully exported {len(all_activities)} activities to {filename}")
+        logging.info(f"Successfully exported {len(all_activities)} activities to {filename}")
     else:
         print("\n⚠ No activities found for the specified date range and agent.")
+        logging.warning("No activities found for the specified date range and agent.")
 
     print("\n" + "=" * 50)
     print("Analysis completed!")
+    logging.info("Analysis completed!")
 
 # Run the script if executed directly
 if __name__ == "__main__":

@@ -65,6 +65,8 @@ USAGE SCENARIOS:
 """
 
 import requests
+import logging
+import sys
 
 # Replace with your details
 API_KEY = "5TMgbcZdRFY70hSpEdj"
@@ -75,15 +77,31 @@ STATUS_URL = f"https://{DOMAIN}/api/v2/reports/omni_schedule/{UUID}"
 # Authentication
 AUTH = (API_KEY, "X")
 
+# Configure logging to both file and console
+LOG_FILENAME = 'job_status_check.log'
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILENAME, encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
 def check_export_status():
+    logging.info(f"Checking export status for UUID: {UUID}")
+    print(f"Checking export status for UUID: {UUID}")
     try:
         response = requests.get(STATUS_URL, auth=AUTH)
         response.raise_for_status()
         data = response.json()
         print("Export Status:", data)
+        logging.info(f"Export status retrieved successfully: {data}")
         return data
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching export status: {e}")
+        error_msg = f"Error fetching export status: {e}"
+        print(error_msg)
+        logging.error(error_msg)
         return None
 
 if __name__ == "__main__":

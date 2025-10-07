@@ -72,6 +72,10 @@ import requests
 import time
 import logging
 import os
+import sys
+import tkinter as tk
+from tkinter import scrolledtext, messagebox, ttk
+import threading
 
 # Configure logging to file and console
 logging.basicConfig(
@@ -94,9 +98,9 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-# List of ticket IDs to add 'qa' tags to
+# Default list of ticket IDs to add 'qa' tags to
 # Replace this list with your actual ticket IDs
-ticket_ids = [
+DEFAULT_TICKET_IDS = [
     292584, 292599, 294867, 294931, 294934, 295987, 297199, 297302, 297903, 298495,
     298514, 298681, 299126, 299921, 294741, 295051, 297006, 294032, 294298, 295213,
     297286, 297988, 294145, 294302, 295478, 295740, 296020, 296247, 297695, 298415,
@@ -108,15 +112,19 @@ ticket_ids = [
     297315, 297393, 297512, 297612, 294438, 294725, 295505, 293406, 294264, 299218
 ]
 
-def update_ticket_tags(ticket_id):
-    """
-    Add 'qa' tag to a specific ticket if not already present.
+# Common tags that can be added
+COMMON_TAGS = ['qa', 'urgent', 'high-priority', 'low-priority', 'bug', 'feature', 'enhancement', 'support']
 
-    This function fetches the current ticket details, checks if the 'qa' tag
+def update_ticket_tags(ticket_id, tag_to_add='qa'):
+    """
+    Add a specified tag to a specific ticket if not already present.
+
+    This function fetches the current ticket details, checks if the specified tag
     already exists, and adds it if missing.
 
     Args:
         ticket_id (int): The ticket ID to update
+        tag_to_add (str): The tag to add to the ticket
 
     Returns:
         bool: True if successfully updated, False otherwise
@@ -133,13 +141,13 @@ def update_ticket_tags(ticket_id):
             ticket_data = response.json()
             existing_tags = ticket_data.get("tags", [])
 
-            # Check if 'qa' tag is already present
-            if "qa" in existing_tags:
-                logging.info(f"Ticket {ticket_id} already has 'qa' tag. Skipping.")
+            # Check if tag is already present
+            if tag_to_add in existing_tags:
+                logging.info(f"Ticket {ticket_id} already has '{tag_to_add}' tag. Skipping.")
                 return True
 
-            # Add 'qa' tag to existing tags (remove duplicates)
-            updated_tags = list(set(existing_tags + ["qa"]))
+            # Add tag to existing tags (remove duplicates)
+            updated_tags = list(set(existing_tags + [tag_to_add]))
             payload = {"tags": updated_tags}
 
             # Update ticket with new tags
@@ -151,33 +159,54 @@ def update_ticket_tags(ticket_id):
             )
 
             if update_response.status_code == 200:
-                logging.info(f"✓ Successfully added 'qa' tag to ticket {ticket_id}")
+                logging.info(f"[SUCCESS] Added '{tag_to_add}' tag to ticket {ticket_id}")
                 return True
             else:
-                logging.error(f"✗ Failed to update ticket {ticket_id}: {update_response.status_code} - {update_response.text}")
+                logging.error(f"[ERROR] Failed to update ticket {ticket_id}: {update_response.status_code} - {update_response.text}")
                 return False
 
         elif response.status_code == 404:
-            logging.warning(f"⚠ Ticket {ticket_id} not found (404)")
+            logging.warning(f"[WARNING] Ticket {ticket_id} not found (404)")
             return False
         else:
-            logging.error(f"✗ Error fetching ticket {ticket_id}: {response.status_code} - {response.text}")
+            logging.error(f"[ERROR] Error fetching ticket {ticket_id}: {response.status_code} - {response.text}")
             return False
 
     except requests.exceptions.RequestException as e:
-        logging.error(f"✗ Request error for ticket {ticket_id}: {str(e)}")
+        logging.error(f"[ERROR] Request error for ticket {ticket_id}: {str(e)}")
         return False
 
-def main():
+def main(ticket_ids=None, tag_to_add='qa', use_gui=False):
     """
     Main function to process all tickets with rate limiting.
+
+    Args:
+        ticket_ids (list): List of ticket IDs to process
+        tag_to_add (str): Tag to add to tickets
+        use_gui (bool): Whether to use GUI mode
     """
+    if ticket_ids is None:
+        ticket_ids = DEFAULT_TICKET_IDS
+
+    if use_gui:
+        # GUI mode - use threading to keep GUI responsive
+        def run_batch_update():
+            process_tickets_gui(ticket_ids, tag_to_add)
+
+        threading.Thread(target=run_batch_update, daemon=True).start()
+        return
+
+    # Command-line mode only - check if GUI flag was passed
+    if len(sys.argv) > 1 and sys.argv[1] == '--gui':
+        # This shouldn't happen, but just in case
+        return
+
     print("Starting batch ticket tag addition...")
     print(f"Processing {len(ticket_ids)} tickets...")
+    print(f"Tag to add: {tag_to_add}")
     print("=" * 60)
 
     success_count = 0
-    skip_count = 0
     error_count = 0
 
     # Process tickets in batches with rate limiting
@@ -185,10 +214,8 @@ def main():
         print(f"Processing ticket {index}/{len(ticket_ids)}: ID {ticket_id}")
 
         # Update the ticket
-        if update_ticket_tags(ticket_id):
+        if update_ticket_tags(ticket_id, tag_to_add):
             success_count += 1
-        elif "already has" in str(logging.getLogger().handlers[0].stream.getvalue()):
-            skip_count += 1
         else:
             error_count += 1
 
@@ -204,13 +231,178 @@ def main():
     print("=" * 60)
     print(f"Total tickets processed: {len(ticket_ids)}")
     print(f"Successfully updated: {success_count}")
-    print(f"Already had 'qa' tag: {skip_count}")
     print(f"Errors/failures: {error_count}")
     print("=" * 60)
 
+    logging.info(f"Batch update completed. Success: {success_count}, Errors: {error_count}")
+
+def process_tickets_gui(ticket_ids, tag_to_add):
+    """
+    Process tickets in GUI mode with progress updates.
+    """
+    success_count = 0
+    skip_count = 0
+    error_count = 0
+
+    # Update GUI elements
+    def update_progress(current, total, message=""):
+        progress_var.set(f"Processing: {current}/{total} tickets ({int((current/total)*100)}%)")
+        if message:
+            log_area.insert(tk.END, message + "\n")
+        log_area.see(tk.END)
+        app.update_idletasks()
+
+    update_progress(0, len(ticket_ids), "Starting batch ticket tag addition...")
+    update_progress(0, len(ticket_ids), f"Tag to add: {tag_to_add}")
+
+    # Process tickets in batches with rate limiting
+    for index, ticket_id in enumerate(ticket_ids, start=1):
+        update_progress(index, len(ticket_ids), f"Processing ticket {index}/{len(ticket_ids)}: ID {ticket_id}")
+
+        # Update the ticket
+        if update_ticket_tags(ticket_id, tag_to_add):
+            success_count += 1
+        elif "already has" in str(logging.getLogger().handlers[0].stream.getvalue()):
+            skip_count += 1
+        else:
+            error_count += 1
+
+        # Handle rate limits: pause every 50 requests
+        if index % 50 == 0:
+            update_progress(index, len(ticket_ids), f"Processed {index} tickets. Pausing for rate limit...")
+            logging.info(f"Pausing for rate limit after {index} requests...")
+            time.sleep(10)
+
+    # Print final summary
+    summary_msg = "\n" + "=" * 60 + "\n"
+    summary_msg += "BATCH UPDATE SUMMARY\n"
+    summary_msg += "=" * 60 + "\n"
+    summary_msg += f"Total tickets processed: {len(ticket_ids)}\n"
+    summary_msg += f"Successfully updated: {success_count}\n"
+    summary_msg += f"Already had '{tag_to_add}' tag: {skip_count}\n"
+    summary_msg += f"Errors/failures: {error_count}\n"
+    summary_msg += "=" * 60
+
+    update_progress(len(ticket_ids), len(ticket_ids), summary_msg)
     logging.info(f"Batch update completed. Success: {success_count}, Skipped: {skip_count}, Errors: {error_count}")
 
-# Run the script if executed directly
+    # Show completion message
+    messagebox.showinfo("Tag Addition Complete",
+                       f"Processed {len(ticket_ids)} tickets.\n"
+                       f"Successfully updated: {success_count}\n"
+                       f"Already had tag: {skip_count}\n"
+                       f"Errors: {error_count}")
+
+def parse_ticket_ids(text_input):
+    """Parse ticket IDs from text input (comma-separated or one per line)."""
+    if not text_input.strip():
+        return []
+
+    # Split by comma or newline and clean up
+    ids = []
+    for item in text_input.replace(',', '\n').split('\n'):
+        item = item.strip()
+        if item and item.isdigit():
+            ids.append(int(item))
+
+    return ids
+
+def create_gui():
+    """Create the graphical user interface."""
+    global tag_var, ticket_ids_text, log_area, progress_var, app
+
+    app = tk.Tk()
+    app.title("Freshdesk Ticket Tag Manager")
+    app.geometry("600x500")
+
+    # Tag selection
+    tk.Label(app, text="Tag Management", font=("Arial", 12, "bold")).pack(pady=10)
+
+    tag_frame = tk.Frame(app)
+    tag_frame.pack(pady=5, padx=20, fill="x")
+
+    tk.Label(tag_frame, text="Tag to Add:").grid(row=0, column=0, sticky="w")
+    tag_var = tk.StringVar(value="qa")
+    tag_combo = ttk.Combobox(tag_frame, textvariable=tag_var, values=COMMON_TAGS, width=27)
+    tag_combo.grid(row=0, column=1, padx=10)
+    tag_combo.bind('<KeyRelease>', lambda e: update_tag_suggestions(e, tag_var, tag_combo))
+
+    # Ticket IDs input
+    tk.Label(app, text="Ticket IDs (one per line or comma-separated):").pack(pady=5)
+
+    ticket_ids_text = tk.Text(app, height=8, width=60)
+    ticket_ids_text.pack(pady=5, padx=20)
+
+    # Load default ticket IDs
+    ticket_ids_text.insert('1.0', '\n'.join(map(str, DEFAULT_TICKET_IDS[:10])))  # Show first 10 as example
+    ticket_ids_text.insert(tk.END, '\n... (add more ticket IDs above)')
+
+    # Buttons
+    button_frame = tk.Frame(app)
+    button_frame.pack(pady=10)
+
+    def start_processing():
+        tag_to_add = tag_var.get().strip()
+        ticket_input = ticket_ids_text.get('1.0', tk.END).strip()
+
+        if not tag_to_add:
+            messagebox.showerror("Error", "Please specify a tag to add.")
+            return
+
+        ticket_ids = parse_ticket_ids(ticket_input)
+
+        if not ticket_ids:
+            messagebox.showerror("Error", "Please provide valid ticket IDs (numbers only).")
+            return
+
+        # Run in separate thread to keep GUI responsive
+        threading.Thread(target=process_tickets_gui, args=(ticket_ids, tag_to_add), daemon=True).start()
+
+    tk.Button(button_frame, text="Start Tag Addition",
+              command=start_processing,
+              bg="#4CAF50", fg="white", padx=20).pack(side=tk.LEFT, padx=5)
+
+    def clear_form():
+        tag_var.set("qa")
+        ticket_ids_text.delete('1.0', tk.END)
+
+    tk.Button(button_frame, text="Clear Form",
+              command=clear_form, padx=20).pack(side=tk.LEFT, padx=5)
+
+    # Progress and log area
+    progress_var = tk.StringVar(value="Ready")
+    tk.Label(app, textvariable=progress_var).pack(pady=5)
+
+    tk.Label(app, text="Operation Log:").pack(pady=5)
+    log_area = scrolledtext.ScrolledText(app, height=10, width=70, state=tk.DISABLED)
+    log_area.pack(pady=5, padx=20)
+
+    # Instructions
+    instructions = tk.Label(app,
+                           text="Instructions:\n"
+                                "1. Select or type the tag you want to add\n"
+                                "2. Enter ticket IDs (one per line or comma-separated)\n"
+                                "3. Click 'Start Tag Addition' to begin",
+                           justify="left", fg="gray")
+    instructions.pack(pady=10, padx=20)
+
+    return app
+
+def update_tag_suggestions(event, tag_var, tag_combo):
+    """Update tag suggestions as user types."""
+    typed = tag_var.get().lower()
+    if len(typed) >= 2:
+        suggestions = [tag for tag in COMMON_TAGS if typed in tag.lower()]
+        if suggestions:
+            tag_combo['values'] = suggestions
+
+# Run GUI if --gui flag is passed, otherwise run command line mode
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == '--gui':
+        # GUI mode
+        app = create_gui()
+        app.mainloop()
+    else:
+        # Command line mode - use default ticket IDs and 'qa' tag
+        main()
 

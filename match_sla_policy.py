@@ -78,6 +78,7 @@ import json
 import time
 import logging
 import pandas as pd
+import sys
 
 # Configuration
 API_KEY = '5TMgbcZdRFY70hSpEdj'
@@ -85,8 +86,15 @@ DOMAIN = 'benchmarkeducationcompany.freshdesk.com'
 BASE_URL = f'https://{DOMAIN}/api/v2'
 HEADERS = {'Content-Type': 'application/json'}
 
-# Logging setup
-logging.basicConfig(filename='sla_policies.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Configure logging to both file and console
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('sla_policies.log', encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
 def get_sla_policies():
     endpoint = f'{BASE_URL}/sla_policies'

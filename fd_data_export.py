@@ -87,6 +87,16 @@ import logging
 import sys
 from pathlib import Path
 
+# Configure logging to both file and console
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('fd_data_export.log', encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
 # Freshdesk API Configuration
 # TODO: Move these to environment variables for security
 API_KEY = "5TMgbcZdRFY70hSpEdj"  # Replace with your actual API key
@@ -424,7 +434,6 @@ def main():
     print("Freshdesk Data Export Download Tool")
     print("=" * 60)
 
-    # Setup logging
     logging.info("Starting Freshdesk Data Export Download Tool")
     logging.info(f"Export UUID: {EXPORT_UUID}")
     logging.info(f"Download path: {DOWNLOAD_PATH}")
@@ -432,11 +441,13 @@ def main():
     # Validate configuration
     if not validate_configuration():
         print("❌ Configuration validation failed. Please check your settings.")
+        logging.error("Configuration validation failed.")
         return 1
 
     # Ensure download directory exists and is writable
     if not ensure_download_directory():
         print("❌ Download directory validation failed.")
+        logging.error("Download directory validation failed.")
         return 1
 
     # Clean up any failed downloads from previous runs

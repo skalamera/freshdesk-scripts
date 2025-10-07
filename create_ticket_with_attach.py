@@ -78,6 +78,8 @@ USAGE SCENARIOS:
 
 import requests
 import json
+import logging
+import sys
 
 # Freshdesk API Details
 API_KEY = "5TMgbcZdRFY70hSpEdj"
@@ -88,6 +90,17 @@ ATTACHMENT_PATH = r"C:\Downloads\4 (2).png"
 # API URL for creating a new tracker ticket
 create_ticket_url = f"https://{DOMAIN}/api/v2/tickets"
 
+# Configure logging to both file and console
+LOG_FILENAME = 'ticket_attachment_creation.log'
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILENAME, encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
 # Headers for authentication
 headers = {
     "Authorization": f"{API_KEY}:X",
@@ -95,6 +108,8 @@ headers = {
 }
 
 # Step 1: Create the tracker ticket (without attachment)
+logging.info("Step 1: Creating tracker ticket...")
+print("Step 1: Creating tracker ticket...")
 ticket_payload = {
     "description": "This is a tracker ticket linked to another issue.",
     "subject": "Tracker Ticket for Issue #115423",
@@ -113,11 +128,16 @@ if create_response.status_code == 201:
     tracker_ticket = create_response.json()  # Get response as JSON
     tracker_ticket_id = tracker_ticket["id"]  # Extract new ticket ID
     print(f"âœ… Tracker ticket created successfully! Ticket ID: {tracker_ticket_id}")
+    logging.info(f"Tracker ticket created successfully! Ticket ID: {tracker_ticket_id}")
 else:
-    print(f"âŒ Failed to create tracker ticket: {create_response.status_code}, {create_response.text}")
+    error_msg = f"Failed to create tracker ticket: {create_response.status_code}, {create_response.text}"
+    print(f"âŒ {error_msg}")
+    logging.error(error_msg)
     exit()  # Stop script if creation fails
 
 # Step 2: Update the newly created tracker ticket with the attachment
+logging.info("Step 2: Adding attachment to tracker ticket...")
+print("Step 2: Adding attachment to tracker ticket...")
 update_ticket_url = f"https://{DOMAIN}/api/v2/tickets/{tracker_ticket_id}/notes"
 
 # Open the attachment file
@@ -138,6 +158,13 @@ with open(ATTACHMENT_PATH, "rb") as file:
 # Check if update was successful
 if update_response.status_code == 201:
     print("âœ… Attachment added successfully to the tracker ticket!")
+    logging.info("Attachment added successfully to the tracker ticket!")
 else:
+<<<<<<< Current (Your changes)
     print(f"âŒ Failed to add attachment: {update_response.status_code}, {update_response.text}")
+=======
+    error_msg = f"Failed to add attachment: {update_response.status_code}, {update_response.text}"
+    print(f"âŒ {error_msg}")
+    logging.error(error_msg)
+>>>>>>> Incoming (Background Agent changes)
 

@@ -76,6 +76,8 @@ USAGE SCENARIOS:
 
 import requests
 import json
+import logging
+import sys
 
 api_key = '5TMgbcZdRFY70hSpEdj'
 domain = 'benchmarkeducationcompany.freshdesk.com'
@@ -134,7 +136,20 @@ automation_rule = {
     "actions": actions
 }
 
+# Configure logging to both file and console
+LOG_FILENAME = 'automation_creation.log'
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILENAME, encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
 # Make the API request to create the rule
+logging.info("Creating automation rule...")
+print("Creating automation rule...")
 url = f'https://{domain}/api/v2/automations/{automation_type_id}/rules'
 headers = {
     'Content-Type': 'application/json'
@@ -144,8 +159,16 @@ response = requests.post(url, auth=(api_key, 'X'), headers=headers, data=json.du
 
 if response.status_code == 201:
     print("Automation rule created successfully.")
+    logging.info("Automation rule created successfully.")
 else:
+<<<<<<< Current (Your changes)
     print("Failed to create automation rule.")
     print("Status Code:", response.status_code)
     print("Response:", response.json())
+=======
+    error_msg = f"Failed to create automation rule. Status Code: {response.status_code}"
+    print(error_msg)
+    print("Response:", response.json())
+    logging.error(error_msg)
+>>>>>>> Incoming (Background Agent changes)
 
