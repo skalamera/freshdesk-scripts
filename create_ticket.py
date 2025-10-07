@@ -1,4 +1,4 @@
-﻿"""
+"""
 Freshdesk Ticket Creation Script
 
 DESCRIPTION:
@@ -66,6 +66,11 @@ import json
 import time
 import random
 import os
+import logging
+import sys
+import tkinter as tk
+from tkinter import ttk, messagebox, scrolledtext
+import threading
 
 # Freshdesk API Configuration
 # TODO: Move these to environment variables for security
@@ -77,6 +82,17 @@ API_URL = f"https://{DOMAIN}/api/v2/tickets"
 HEADERS = {
     "Content-Type": "application/json"
 }
+
+# Configure logging to both file and console
+LOG_FILENAME = 'ticket_creation.log'
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILENAME, encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
 
 # Sample ticket subjects and descriptions for testing purposes
 # These are example subjects related to subscription and email issues
@@ -122,35 +138,37 @@ def generate_random_email():
     # Create email in format: firstname.lastname123@example.com
     return f"{random.choice(first_names)}.{random.choice(last_names)}{random.randint(100,999)}@{domain}"
 
-def create_ticket(subject, description):
+def create_ticket(subject, description, email=None, priority=1, group_id=67000578451, responder_id=67051499418):
     """
     Create a single support ticket in Freshdesk.
 
     This function sends a POST request to the Freshdesk API to create
-    a new ticket with the specified subject and description.
+    a new ticket with the specified parameters.
 
     Args:
         subject (str): The ticket title/subject line
         description (str): Detailed description of the issue
+        email (str): Email address of the requester (optional)
+        priority (int): Priority level (1 = Low, 2 = Medium, 3 = High, 4 = Urgent)
+        group_id (int): ID of the group to assign the ticket to
+        responder_id (int): ID of the specific agent to assign the ticket to
 
     Returns:
         None: Prints success/failure messages to console
 
     Note:
-        - Automatically assigns to group ID 67000578451 ('Old Subs' group)
-        - Assigns to specific agent (responder_id: 67051499418)
-        - Sets status to Open (2) and priority to Low (1)
-        - Uses random email for requester (for testing)
+        - Uses random email for requester if not provided (for testing)
+        - Sets status to Open (2) by default
     """
     # Prepare the ticket data payload
     payload = {
         "subject": subject,
         "description": description,
         "status": 2,  # 2 = Open status
-        "priority": 1,  # 1 = Low priority
-        "group_id": 67000578451,  # Assign to 'Old Subs' group
-        "responder_id": 67051499418,  # Assign to specific agent
-        "email": generate_random_email()  # Random requester email for testing
+        "priority": priority,
+        "group_id": group_id,
+        "responder_id": responder_id,
+        "email": email if email else generate_random_email()  # Use provided email or random for testing
     }
 
     # Make the API request to create the ticket
@@ -178,19 +196,31 @@ def create_ticket(subject, description):
         print(f"  Error: {response.text}")
         print(f"  Subject: {subject}")
 
-def main():
+def main(use_gui=False, tickets_data=None):
     """
     Main function to create multiple test tickets.
 
-    This function creates 8 sample tickets using random combinations
-    of subjects and descriptions. Includes delays to respect API rate limits.
+    Args:
+        use_gui (bool): Whether to use GUI mode
+        tickets_data (list): List of ticket data for GUI mode
     """
+    if use_gui:
+        # GUI mode - use threading to keep GUI responsive
+        def run_ticket_creation():
+            create_tickets_gui(tickets_data)
+
+        threading.Thread(target=run_ticket_creation, daemon=True).start()
+        return
+
+    # Command-line mode
     print("Starting ticket creation process...")
     print("=" * 50)
+    logging.info("Starting ticket creation process...")
 
     # Create 8 tickets with random subject/description combinations
     for ticket_num in range(8):
         print(f"\nCreating ticket #{ticket_num + 1}...")
+        logging.info(f"Creating ticket #{ticket_num + 1}...")
 
         # Select random subject and description
         subject = random.choice(TICKET_SUBJECTS)
@@ -206,8 +236,229 @@ def main():
 
     print("\n" + "=" * 50)
     print("Ticket creation process completed!")
+    logging.info("Ticket creation process completed!")
 
-# Run the script if executed directly
+def create_tickets_gui(tickets_data):
+    """
+    Create tickets in GUI mode with progress updates.
+    """
+    success_count = 0
+    error_count = 0
+
+    def update_progress(current, total, message=""):
+        progress_var.set(f"Creating: {current}/{total} tickets ({int((current/total)*100)}%)")
+        if message:
+            log_area.insert(tk.END, message + "\n")
+        log_area.see(tk.END)
+        app.update_idletasks()
+
+    update_progress(0, len(tickets_data), "Starting ticket creation...")
+
+    for i, ticket_data in enumerate(tickets_data, 1):
+        update_progress(i, len(tickets_data), f"Creating ticket {i}: {ticket_data['subject']}")
+
+        try:
+            create_ticket(
+                subject=ticket_data['subject'],
+                description=ticket_data['description'],
+                email=ticket_data.get('email'),
+                priority=ticket_data.get('priority', 1),
+                group_id=ticket_data.get('group_id', 67000578451),
+                responder_id=ticket_data.get('responder_id', 67051499418)
+            )
+            success_count += 1
+        except Exception as e:
+            error_count += 1
+            update_progress(i, len(tickets_data), f"Error creating ticket {i}: {str(e)}")
+
+        # Wait between requests to avoid rate limits
+        if i < len(tickets_data):
+            time.sleep(1)
+
+    # Show completion summary
+    summary_msg = "\n" + "=" * 50 + "\n"
+    summary_msg += "TICKET CREATION SUMMARY\n"
+    summary_msg += "=" * 50 + "\n"
+    summary_msg += f"Total tickets processed: {len(tickets_data)}\n"
+    summary_msg += f"Successfully created: {success_count}\n"
+    summary_msg += f"Errors: {error_count}\n"
+    summary_msg += "=" * 50
+
+    update_progress(len(tickets_data), len(tickets_data), summary_msg)
+    logging.info(f"GUI ticket creation completed. Success: {success_count}, Errors: {error_count}")
+
+    messagebox.showinfo("Ticket Creation Complete",
+                       f"Created {success_count} tickets successfully.\n"
+                       f"Errors: {error_count}")
+
+def create_gui():
+    """Create the graphical user interface for ticket creation."""
+    global subject_var, description_text, email_var, priority_var, group_id_var, responder_id_var, log_area, progress_var, app
+
+    app = tk.Tk()
+    app.title("Freshdesk Ticket Creator")
+    app.geometry("600x600")
+
+    # Main frame
+    main_frame = ttk.Frame(app, padding="10")
+    main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+    # Configure grid weights
+    app.columnconfigure(0, weight=1)
+    app.rowconfigure(0, weight=1)
+    main_frame.columnconfigure(1, weight=1)
+
+    # Title
+    title_label = ttk.Label(main_frame, text="Create Freshdesk Tickets", font=("Arial", 14, "bold"))
+    title_label.grid(row=0, column=0, columnspan=2, pady=10)
+
+    # Ticket details form
+    form_frame = ttk.LabelFrame(main_frame, text="Ticket Details", padding="10")
+    form_frame.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+    form_frame.columnconfigure(1, weight=1)
+
+    # Subject
+    ttk.Label(form_frame, text="Subject:").grid(row=0, column=0, sticky=tk.W, pady=5)
+    subject_var = tk.StringVar()
+    subject_entry = ttk.Entry(form_frame, textvariable=subject_var, width=50)
+    subject_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5)
+
+    # Description
+    ttk.Label(form_frame, text="Description:").grid(row=1, column=0, sticky=tk.W, pady=5)
+    description_text = tk.Text(form_frame, height=4, width=50)
+    description_text.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
+
+    # Email
+    ttk.Label(form_frame, text="Requester Email:").grid(row=2, column=0, sticky=tk.W, pady=5)
+    email_var = tk.StringVar()
+    email_entry = ttk.Entry(form_frame, textvariable=email_var, width=50)
+    email_entry.grid(row=2, column=1, sticky=(tk.W, tk.E), pady=5)
+
+    # Priority
+    ttk.Label(form_frame, text="Priority:").grid(row=3, column=0, sticky=tk.W, pady=5)
+    priority_var = tk.StringVar(value="1")
+    priority_combo = ttk.Combobox(form_frame, textvariable=priority_var,
+                                 values=["1 - Low", "2 - Medium", "3 - High", "4 - Urgent"], width=47)
+    priority_combo.grid(row=3, column=1, sticky=(tk.W, tk.E), pady=5)
+
+    # Group ID
+    ttk.Label(form_frame, text="Group ID:").grid(row=4, column=0, sticky=tk.W, pady=5)
+    group_id_var = tk.StringVar(value="67000578451")
+    group_id_entry = ttk.Entry(form_frame, textvariable=group_id_var, width=50)
+    group_id_entry.grid(row=4, column=1, sticky=(tk.W, tk.E), pady=5)
+
+    # Responder ID
+    ttk.Label(form_frame, text="Responder ID:").grid(row=5, column=0, sticky=tk.W, pady=5)
+    responder_id_var = tk.StringVar(value="67051499418")
+    responder_id_entry = ttk.Entry(form_frame, textvariable=responder_id_var, width=50)
+    responder_id_entry.grid(row=5, column=1, sticky=(tk.W, tk.E), pady=5)
+
+    # Quick templates
+    template_frame = ttk.LabelFrame(main_frame, text="Quick Templates", padding="10")
+    template_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
+
+    def apply_template(template_type):
+        templates = {
+            'subscription': {
+                'subject': 'Subscription Issue',
+                'description': 'Customer is experiencing issues with their subscription. Please investigate and resolve.'
+            },
+            'login': {
+                'subject': 'Login Problem',
+                'description': 'User unable to log in to their account. Please assist with troubleshooting.'
+            },
+            'bug': {
+                'subject': 'Bug Report',
+                'description': 'User has reported a bug in the system. Please investigate and provide a fix.'
+            }
+        }
+
+        if template_type in templates:
+            template = templates[template_type]
+            subject_var.set(template['subject'])
+            description_text.delete('1.0', tk.END)
+            description_text.insert('1.0', template['description'])
+
+    ttk.Button(template_frame, text="Subscription Issue",
+               command=lambda: apply_template('subscription')).grid(row=0, column=0, padx=5)
+    ttk.Button(template_frame, text="Login Problem",
+               command=lambda: apply_template('login')).grid(row=0, column=1, padx=5)
+    ttk.Button(template_frame, text="Bug Report",
+               command=lambda: apply_template('bug')).grid(row=0, column=2, padx=5)
+
+    # Buttons
+    button_frame = ttk.Frame(main_frame)
+    button_frame.grid(row=3, column=0, columnspan=2, pady=10)
+
+    def create_single_ticket():
+        subject = subject_var.get().strip()
+        description = description_text.get('1.0', tk.END).strip()
+        email = email_var.get().strip()
+        priority = int(priority_var.get().split(' - ')[0]) if priority_var.get() else 1
+
+        if not subject or not description:
+            messagebox.showerror("Error", "Please provide both subject and description.")
+            return
+
+        try:
+            create_ticket(
+                subject=subject,
+                description=description,
+                email=email if email else None,
+                priority=priority,
+                group_id=int(group_id_var.get()),
+                responder_id=int(responder_id_var.get())
+            )
+            messagebox.showinfo("Success", "Ticket created successfully!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to create ticket: {str(e)}")
+
+    def create_multiple_tickets():
+        # Create multiple tickets from sample data
+        tickets_data = []
+        for i in range(3):  # Create 3 sample tickets
+            tickets_data.append({
+                'subject': f"Sample Ticket {i+1} - {random.choice(TICKET_SUBJECTS)}",
+                'description': f"This is sample ticket {i+1}. {random.choice(TICKET_DESCRIPTIONS)}",
+                'email': f"sample{i+1}@example.com",
+                'priority': random.randint(1, 4)
+            })
+
+        threading.Thread(target=create_tickets_gui, args=(tickets_data,), daemon=True).start()
+
+    ttk.Button(button_frame, text="Create Single Ticket",
+               command=create_single_ticket).grid(row=0, column=0, padx=5)
+    ttk.Button(button_frame, text="Create Sample Tickets",
+               command=create_multiple_tickets).grid(row=0, column=1, padx=5)
+
+    # Progress and log area
+    progress_var = tk.StringVar(value="Ready")
+    ttk.Label(main_frame, textvariable=progress_var).grid(row=4, column=0, columnspan=2, pady=5)
+
+    ttk.Label(main_frame, text="Operation Log:").grid(row=5, column=0, columnspan=2, pady=5)
+    log_area = scrolledtext.ScrolledText(main_frame, height=8, width=70, state=tk.DISABLED)
+    log_area.grid(row=6, column=0, columnspan=2, pady=5)
+
+    # Instructions
+    instructions = tk.Label(main_frame,
+                           text="Instructions:\n"
+                                "1. Fill in ticket details above\n"
+                                "2. Use Quick Templates for common scenarios\n"
+                                "3. Click 'Create Single Ticket' or 'Create Sample Tickets'\n"
+                                "4. Monitor progress in the log area",
+                           justify="left", fg="gray")
+    instructions.grid(row=7, column=0, columnspan=2, pady=10)
+
+    return app
+
+# Run GUI if no command line arguments, otherwise run command line mode
 if __name__ == "__main__":
-    main()
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == '--gui':
+        # GUI mode
+        app = create_gui()
+        app.mainloop()
+    else:
+        # Command line mode
+        main()
 
