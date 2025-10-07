@@ -1,4 +1,81 @@
-﻿import requests
+"""
+Freshdesk Ticket Status Update Script
+
+DESCRIPTION:
+This script updates ticket statuses in Freshdesk based on a predefined mapping.
+It finds tickets with old status values and updates them to new status values
+with proper error handling, retry logic, and rate limit management.
+
+REQUIREMENTS:
+- Python 3.x
+- requests library (install with: pip install requests)
+- Valid Freshdesk API key with ticket update permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace API_KEY with your actual Freshdesk API key
+2. Replace DOMAIN with your Freshdesk domain (e.g., 'yourcompany.freshdesk.com')
+3. Update STATUS_MAPPING with your desired status transitions
+4. Ensure your API key has permissions for ticket updates
+5. Run the script: python update_ticket_status.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Tickets API: https://developers.freshdesk.com/api/#update_ticket
+- Authentication: Basic Auth with API key
+- Rate Limits: 50 requests per minute for most endpoints
+
+INPUT PARAMETERS:
+- API_KEY: Your Freshdesk API key
+- DOMAIN: Your Freshdesk domain
+- STATUS_MAPPING: Dictionary mapping old status IDs to new status IDs
+- MAX_RETRIES: Maximum retry attempts for failed requests
+
+OUTPUT:
+- Updates tickets with new status values based on mapping
+- Console output showing progress and results
+- Detailed error messages for failed updates
+- Summary statistics on successful/failed updates
+
+STATUS UPDATE PROCESS:
+- Fetches all tickets with pagination (50 per page)
+- Checks each ticket against STATUS_MAPPING
+- Updates tickets that match old status values
+- Displays success/failure status for each update
+
+ERROR HANDLING:
+- Handles HTTP 400 (bad request) errors
+- Handles HTTP 403 (permission denied) errors
+- Handles HTTP 404 (ticket not found) errors
+- Handles HTTP 429 (rate limit) errors with automatic retry
+- Handles HTTP 5xx (server) errors with retry and backoff
+
+RATE LIMIT HANDLING:
+- Includes 1-second delays between requests
+- Handles rate limit responses with retry-after delays
+- Implements exponential backoff for server errors
+- Monitors API usage to avoid exceeding limits
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has ticket update permissions
+- Check that status IDs in mapping are valid
+- Ensure network connectivity to Freshdesk API
+- Monitor rate limit usage in Freshdesk dashboard
+- Check that tickets exist and are accessible
+
+USAGE SCENARIOS:
+- Update deprecated status values to new status codes
+- Standardize ticket statuses across the system
+- Migrate tickets from old status workflows
+- Bulk status cleanup and maintenance
+"""
+
+import requests
 import time
 
 # Freshdesk API details

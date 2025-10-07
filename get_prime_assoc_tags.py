@@ -1,4 +1,81 @@
-﻿import requests
+"""
+Freshdesk Prime Association Tags Retrieval Script
+
+DESCRIPTION:
+This script retrieves prime association information and tags for specific tickets
+in Freshdesk. It fetches prime association ticket IDs and then retrieves tags
+from those tickets, filtering for tags that start with 'SIM' or 'SEDCUST' for
+analysis and reporting purposes.
+
+REQUIREMENTS:
+- Python 3.x
+- requests library (install with: pip install requests)
+- pandas library (install with: pip install pandas)
+- Valid Freshdesk API key with ticket read permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace API_KEY with your actual Freshdesk API key
+2. Replace DOMAIN with your Freshdesk domain (e.g., 'yourcompany.freshdesk.com')
+3. Update ticket_ids list with the ticket IDs you want to analyze
+4. Ensure your API key has permissions for ticket access
+5. Run the script: python get_prime_assoc_tags.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Tickets API: https://developers.freshdesk.com/api/#tickets
+- Prime Association API: https://developers.freshdesk.com/api/#prime_association
+- Authentication: Basic Auth with API key
+
+INPUT PARAMETERS:
+- API_KEY: Your Freshdesk API key
+- DOMAIN: Your Freshdesk domain
+- ticket_ids: List of ticket IDs to process
+- output_file: Excel file for results (default shown)
+
+OUTPUT:
+- Excel file with prime association and tag information
+- Console output showing processing progress
+- Detailed error messages for failed lookups
+
+PRIME ASSOCIATION PROCESS:
+- Fetches prime association ticket ID for each input ticket
+- Retrieves tags from prime association tickets
+- Filters tags that start with 'SIM' or 'SEDCUST'
+- Exports results to Excel for analysis
+
+TAG FILTERING:
+- Only includes tags starting with 'SIM' (e.g., 'SIM-123', 'SIM-TEST')
+- Only includes tags starting with 'SEDCUST' (e.g., 'SEDCUST-456', 'SEDCUST-PROD')
+- Filters out all other tags for cleaner analysis
+
+ERROR HANDLING:
+- Handles HTTP 404 (ticket not found) errors
+- Handles HTTP 429 (rate limit) errors with automatic retry
+- Handles network and parsing errors
+- Continues processing even if individual tickets fail
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has ticket read permissions
+- Check that ticket IDs are valid
+- Ensure network connectivity to Freshdesk API
+- Check that prime associations exist for tickets
+- Monitor rate limit usage in Freshdesk dashboard
+
+USAGE SCENARIOS:
+- Analyze ticket categorization and tagging patterns
+- Identify tickets with specific SIM or SEDCUST tags
+- Generate reports for management review
+- Validate ticket tagging consistency
+- Support workflow analysis and optimization
+"""
+
+import requests
 import pandas as pd
 import time
 

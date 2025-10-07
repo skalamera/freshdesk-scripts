@@ -1,4 +1,80 @@
-﻿import requests
+"""
+Freshdesk Prime Association Retrieval Script
+
+DESCRIPTION:
+This script retrieves prime association information for a list of tickets in
+Freshdesk. Prime associations represent the main or primary related ticket in
+a chain of associated tickets, useful for understanding ticket relationships
+and hierarchies.
+
+REQUIREMENTS:
+- Python 3.x
+- requests library (install with: pip install requests)
+- pandas library (install with: pip install pandas)
+- Valid Freshdesk API key with ticket read permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace API_KEY with your actual Freshdesk API key
+2. Replace BASE_URL domain if using different environment
+3. Update ticket_ids list with the ticket IDs you want to analyze
+4. Ensure your API key has permissions for ticket access
+5. Run the script: python get_prime_association.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Prime Association API: https://developers.freshdesk.com/api/#prime_association
+- Authentication: Basic Auth with API key
+
+INPUT PARAMETERS:
+- API_KEY: Your Freshdesk API key
+- BASE_URL: Freshdesk API base URL
+- ticket_ids: List of ticket IDs to process
+- MAX_CALLS_PER_MINUTE: Rate limit for API calls
+
+OUTPUT:
+- Excel file with prime association data
+- Console output showing processing progress
+- Detailed logging for troubleshooting
+
+PRIME ASSOCIATION PROCESS:
+- Fetches prime association for each ticket ID
+- Handles rate limiting with 1-second delays between calls
+- Exports complete prime association data to Excel
+- Uses pandas json_normalize for nested data flattening
+
+ERROR HANDLING:
+- Handles HTTP 404 (ticket not found) errors
+- Handles HTTP 429 (rate limit) errors with automatic retry
+- Handles network and parsing errors
+- Continues processing even if individual tickets fail
+
+RATE LIMIT HANDLING:
+- Includes 1-second delays between API calls
+- Handles rate limit responses with 60-second retry delays
+- Monitors API usage to avoid exceeding limits
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has ticket read permissions
+- Check that ticket IDs are valid
+- Ensure network connectivity to Freshdesk API
+- Check that tickets have prime associations
+- Monitor rate limit usage in Freshdesk dashboard
+
+USAGE SCENARIOS:
+- Analyze ticket relationship hierarchies
+- Identify primary tickets in association chains
+- Generate reports for ticket organization
+- Understand ticket workflow patterns
+- Support data analysis and business intelligence
+"""
+
+import requests
 import pandas as pd
 import time
 

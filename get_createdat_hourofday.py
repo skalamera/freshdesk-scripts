@@ -1,4 +1,83 @@
-﻿import requests
+"""
+Freshdesk Ticket Creation Time Analysis Script
+
+DESCRIPTION:
+This script processes an Excel file containing ticket IDs and enriches it with
+detailed creation time information. It fetches exact creation timestamps from
+Freshdesk API, converts them to Eastern Time, and extracts the hour of day for
+analysis of ticket creation patterns.
+
+REQUIREMENTS:
+- Python 3.x
+- requests library (install with: pip install requests)
+- pandas library (install with: pip install pandas)
+- pytz library (install with: pip install pytz)
+- Valid Freshdesk API key with ticket read permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace API_KEY with your actual Freshdesk API key
+2. Replace DOMAIN with your Freshdesk domain (e.g., 'yourcompany.freshdesk.com')
+3. Update input_file and output_file paths for your Excel files
+4. Ensure your API key has permissions for ticket access
+5. Run the script: python get_createdat_hourofday.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Tickets API: https://developers.freshdesk.com/api/#tickets
+- Authentication: Basic Auth with API key
+
+INPUT PARAMETERS:
+- API_KEY: Your Freshdesk API key
+- DOMAIN: Your Freshdesk domain
+- input_file: Path to Excel file with ticket IDs
+- output_file: Path for output Excel file with enriched data
+- sheet_name: Name of the Excel sheet containing ticket data
+
+OUTPUT:
+- Updated Excel file with additional columns for creation time data
+- Console output showing processing progress
+- Detailed error messages for failed ticket lookups
+
+TICKET ENRICHMENT PROCESS:
+- Reads ticket IDs from input Excel file
+- Fetches detailed ticket information from Freshdesk API
+- Extracts exact creation timestamps (UTC)
+- Converts timestamps to Eastern Time
+- Extracts hour of day (0-23) for pattern analysis
+
+ERROR HANDLING:
+- Handles HTTP 404 (ticket not found) errors
+- Handles HTTP 429 (rate limit) errors with automatic retry
+- Handles network and parsing errors
+- Continues processing even if individual tickets fail
+
+RATE LIMIT HANDLING:
+- Implements exponential backoff for rate-limited requests
+- Includes delays between requests to respect limits
+- Monitors API usage to avoid exceeding limits
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has ticket read permissions
+- Check that input Excel file exists and is readable
+- Ensure network connectivity to Freshdesk API
+- Check that ticket IDs in Excel are valid
+- Monitor rate limit usage in Freshdesk dashboard
+
+USAGE SCENARIOS:
+- Analyze ticket creation patterns by time of day
+- Identify peak hours for ticket submissions
+- Generate reports for management review
+- Plan staffing and resource allocation
+- Optimize support workflows based on patterns
+"""
+
+import requests
 import pandas as pd
 from datetime import datetime
 import pytz
