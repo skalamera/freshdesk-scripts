@@ -1,21 +1,103 @@
-﻿import requests
+﻿"""
+Freshdesk Ticket Descriptions Batch Retrieval Script
+
+DESCRIPTION:
+This script retrieves descriptions for multiple Freshdesk tickets and exports
+them to an Excel file with comprehensive logging. It processes a predefined
+list of ticket IDs and handles rate limiting automatically.
+
+REQUIREMENTS:
+- Python 3.x
+- requests library (install with: pip install requests)
+- pandas library (install with: pip install pandas)
+- openpyxl library (install with: pip install openpyxl)
+- Valid Freshdesk API key with ticket read permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace API_KEY with your actual Freshdesk API key
+2. Replace DOMAIN with your Freshdesk domain (e.g., 'yourcompany.freshdesk.com')
+3. Update ticket_ids list with the ticket IDs you want to retrieve
+4. Ensure your API key has the necessary permissions for ticket access
+5. Run the script: python get_ticket_desc.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Authentication: Basic Auth with API key
+- Rate Limits: 50 requests per minute for most endpoints
+
+INPUT PARAMETERS:
+- ticket_ids: List of ticket IDs to retrieve descriptions for
+- API_KEY: Your Freshdesk API key
+- DOMAIN: Your Freshdesk domain
+
+OUTPUT:
+- Excel file with ticket IDs and their descriptions
+- Log file with detailed operation information
+- Console output showing progress and results
+
+EXCEL OUTPUT FORMAT:
+- Column 1: Ticket ID
+- Column 2: Description (or "No description available" if empty)
+
+LOGGING:
+- Creates 'ticket_fetch_log.log' with detailed operation logs
+- Logs successful fetches, errors, and rate limit handling
+- Includes timestamps for troubleshooting
+
+ERROR HANDLING:
+- Handles HTTP 404 (ticket not found) errors
+- Handles HTTP 429 (rate limit) errors with automatic retry
+- Handles network and parsing errors
+- Continues processing even if individual tickets fail
+
+RATE LIMIT HANDLING:
+- Automatically detects rate limit responses (HTTP 429)
+- Waits for the specified retry-after period
+- Continues processing remaining tickets after rate limit delay
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has ticket read permissions
+- Check that ticket IDs in the list are valid
+- Ensure network connectivity to Freshdesk API
+- Monitor rate limit usage in Freshdesk dashboard
+- Check log file for detailed error information
+
+PERFORMANCE CONSIDERATIONS:
+- Processes tickets sequentially to respect rate limits
+- Includes small delays between requests if needed
+- Large ticket lists may take significant time to process
+"""
+
+import requests
 import pandas as pd
 import time
 import logging
+import os
 
-# Configure logging
+# Configure logging to file and console
 logging.basicConfig(
-    filename="ticket_fetch_log.log",
     level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("ticket_fetch_log.log"),
+        logging.StreamHandler()  # Also log to console
+    ]
 )
 
-# Freshdesk API details
-API_KEY = "5TMgbcZdRFY70hSpEdj"
-DOMAIN = "benchmarkeducationcompany.freshdesk.com"
+# Freshdesk API Configuration
+# TODO: Move these to environment variables for security
+API_KEY = "5TMgbcZdRFY70hSpEdj"  # Replace with your actual API key
+DOMAIN = "benchmarkeducationcompany.freshdesk.com"  # Replace with your domain
 BASE_URL = f"https://{DOMAIN}/api/v2/tickets/"
 
-# Full list of ticket IDs
+# List of ticket IDs to retrieve descriptions for
+# Replace this list with your actual ticket IDs
 ticket_ids = [
     293528, 293352, 293203, 293181, 293156, 293128, 292629, 292587, 291674,
     290332, 290217, 290199, 290196, 290174, 290152, 290146, 290134, 290073,
@@ -61,41 +143,102 @@ ticket_ids = [
     269627
 ]
 
-# Headers for authentication
+# HTTP Headers for API requests
 headers = {
     "Content-Type": "application/json",
 }
 
-# Data collection
-data = []
-for ticket_id in ticket_ids:
+def fetch_ticket_description(ticket_id):
+    """
+    Fetch the description for a single ticket.
+
+    Args:
+        ticket_id (int): The ticket ID to fetch
+
+    Returns:
+        tuple: (ticket_id, description) or (ticket_id, None) if failed
+    """
     try:
+        # Make API request for ticket details
         response = requests.get(
             f"{BASE_URL}{ticket_id}",
             auth=(API_KEY, "X"),
             headers=headers
         )
-        
+
         if response.status_code == 200:
+            # Success - extract description
             ticket_data = response.json()
-            ticket_description = ticket_data.get("description_text", "No description available")
-            data.append({"Ticket ID": ticket_id, "Description": ticket_description})
-            logging.info(f"Successfully fetched Ticket ID {ticket_id}.")
+            description = ticket_data.get("description_text", "No description available")
+            logging.info(f"Successfully fetched Ticket ID {ticket_id}")
+            return ticket_id, description
+
         elif response.status_code == 404:
-            logging.warning(f"Ticket ID {ticket_id} not found.")
+            # Ticket not found
+            logging.warning(f"Ticket ID {ticket_id} not found (404)")
+            return ticket_id, None
+
         elif response.status_code == 429:
+            # Rate limit exceeded
             retry_after = int(response.headers.get("Retry-After", 60))
-            logging.warning(f"Rate limit reached. Retrying after {retry_after} seconds.")
+            logging.warning(f"Rate limit reached for Ticket ID {ticket_id}. Retrying after {retry_after} seconds.")
             time.sleep(retry_after)
-            continue
+            # Retry the request
+            return fetch_ticket_description(ticket_id)
+
         else:
+            # Other error
             logging.error(f"Failed to fetch Ticket ID {ticket_id}. HTTP Status Code: {response.status_code}")
+            return ticket_id, None
+
     except Exception as e:
         logging.error(f"Error fetching Ticket ID {ticket_id}: {e}")
+        return ticket_id, None
 
-# Save data to Excel
-df = pd.DataFrame(data)
-output_file = "ticket_descriptions_with_logs.xlsx"
-df.to_excel(output_file, index=False)
-logging.info(f"Ticket descriptions have been saved to {output_file}.")
+def main():
+    """
+    Main function to process all tickets and export to Excel.
+    """
+    print("Starting batch ticket description retrieval...")
+    print(f"Processing {len(ticket_ids)} tickets...")
+
+    # Collect data for all tickets
+    data = []
+
+    for i, ticket_id in enumerate(ticket_ids, 1):
+        print(f"Processing ticket {i}/{len(ticket_ids)}: ID {ticket_id}")
+
+        # Fetch ticket description
+        ticket_id_result, description = fetch_ticket_description(ticket_id)
+
+        if description is not None:
+            data.append({
+                "Ticket ID": ticket_id_result,
+                "Description": description
+            })
+
+        # Small delay between requests to be respectful
+        time.sleep(0.1)
+
+    # Export to Excel
+    if data:
+        df = pd.DataFrame(data)
+        output_file = "ticket_descriptions_with_logs.xlsx"
+
+        try:
+            df.to_excel(output_file, index=False)
+            print(f"\n✓ Successfully exported {len(data)} ticket descriptions to {output_file}")
+            logging.info(f"Ticket descriptions exported to {output_file}")
+        except Exception as e:
+            print(f"✗ Failed to export to Excel: {e}")
+            logging.error(f"Failed to export to Excel: {e}")
+    else:
+        print("✗ No ticket data to export")
+        logging.warning("No ticket data collected for export")
+
+    print(f"\nProcessing complete. Check 'ticket_fetch_log.log' for detailed logs.")
+
+# Run the script if executed directly
+if __name__ == "__main__":
+    main()
 

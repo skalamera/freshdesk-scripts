@@ -1,4 +1,87 @@
-﻿import tkinter as tk
+﻿"""
+Freshdesk Region and Account Manager Updater GUI
+
+DESCRIPTION:
+This script provides a graphical user interface for updating ticket regions and
+account managers based on company state information. It automatically determines
+the appropriate region and account manager for each ticket based on the company's
+state and updates the custom fields accordingly.
+
+REQUIREMENTS:
+- Python 3.x
+- tkinter (usually included with Python)
+- requests library (install with: pip install requests)
+- Valid Freshdesk API key with ticket and company read/write permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace API_KEY with your actual Freshdesk API key
+2. Replace DOMAIN with your Freshdesk domain (e.g., 'yourcompany.freshdesk.com')
+3. Update state_to_region_account_manager mapping if needed
+4. Ensure your API key has permissions for ticket and company access
+5. Run the script: python region_updater.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Tickets API: https://developers.freshdesk.com/api/#update_ticket
+- Companies API: https://developers.freshdesk.com/api/#companies
+- Authentication: Basic Auth with API key
+
+INPUT PARAMETERS:
+- API_KEY: Your Freshdesk API key
+- DOMAIN: Your Freshdesk domain
+- REQUEST_INTERVAL: Delay between API requests (default: 0.22 seconds)
+- state_to_region_account_manager: Mapping of states to regions and managers
+
+OUTPUT:
+- GUI interface for ticket ID input and progress monitoring
+- Updates ticket custom fields with region and account manager
+- Log file with detailed operation information
+- Progress tracking and completion statistics
+
+REGION MAPPING:
+- Automatically maps US states to regions (West, Northeast, Central Southwest, Central Southeast)
+- Assigns appropriate account managers based on state
+- Handles international and DoDEA (Department of Defense Education Activity) cases
+
+TICKET UPDATE PROCESS:
+- Fetches company information for each ticket
+- Extracts state from company custom fields
+- Maps state to region and account manager
+- Updates ticket with cf_region and cf_account_manager fields
+- Processes tickets in rate-limited batches
+
+ERROR HANDLING:
+- Handles HTTP 404 (ticket/company not found) errors
+- Handles HTTP 429 (rate limit) errors with automatic retry
+- Handles network and parsing errors
+- Continues processing even if individual tickets fail
+
+RATE LIMIT HANDLING:
+- Implements 0.22-second delays between requests
+- Monitors rate limit usage and adjusts timing
+- Handles rate limit responses with retry-after delays
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has ticket and company read/write permissions
+- Check that company custom fields include 'state'
+- Ensure network connectivity to Freshdesk API
+- Monitor rate limit usage in Freshdesk dashboard
+- Check that tickets have associated companies
+
+USAGE SCENARIOS:
+- Bulk update ticket regions based on company locations
+- Assign appropriate account managers automatically
+- Maintain consistent regional assignments across tickets
+- Data cleanup and standardization operations
+"""
+
+import tkinter as tk
 from tkinter import scrolledtext, messagebox
 import requests
 import time

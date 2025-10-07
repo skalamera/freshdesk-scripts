@@ -1,4 +1,84 @@
-﻿import requests
+﻿"""
+Freshdesk Related Tickets Hourly Analysis Script
+
+DESCRIPTION:
+This script analyzes related tickets for specific tracker tickets and creates
+an hourly distribution report of when tickets were created. It fetches associated
+tickets for tracker tickets and analyzes their creation times by hour of day
+for pattern identification and reporting purposes.
+
+REQUIREMENTS:
+- Python 3.x
+- requests library (install with: pip install requests)
+- openpyxl library (install with: pip install openpyxl)
+- Valid Freshdesk API key with ticket read permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace API_KEY with your actual Freshdesk API key
+2. Replace DOMAIN with your Freshdesk domain (e.g., 'yourcompany.freshdesk.com')
+3. Update TRACKER_TICKET_IDS list with your tracker ticket IDs
+4. Update file_path in main() function for output location
+5. Ensure your API key has permissions for ticket access
+6. Run the script: python related_tickets_by_hour.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Tickets API: https://developers.freshdesk.com/api/#tickets
+- Associated Tickets API: https://developers.freshdesk.com/api/#associated_tickets
+- Authentication: Basic Auth with API key
+
+INPUT PARAMETERS:
+- API_KEY: Your Freshdesk API key
+- DOMAIN: Your Freshdesk domain
+- TRACKER_TICKET_IDS: List of tracker ticket IDs to analyze
+- file_path: Output Excel file path (default: Windows path shown)
+
+OUTPUT:
+- Excel file with ticket details and hourly distribution
+- Two sheets: Tickets and Hourly Distribution
+- Formatted table with styling for better readability
+
+TICKET ANALYSIS PROCESS:
+- Fetches each tracker ticket and its associated tickets
+- Extracts creation timestamps from all related tickets
+- Converts UTC timestamps to hour of day
+- Creates hourly distribution chart
+- Exports detailed ticket information
+
+HOURLY DISTRIBUTION:
+- Analyzes ticket creation patterns by hour (0-23)
+- Shows number of tickets created in each hour
+- Helps identify peak creation times
+- Useful for resource planning and support optimization
+
+ERROR HANDLING:
+- Handles HTTP 404 (ticket not found) errors
+- Handles HTTP 429 (rate limit) errors
+- Handles network and parsing errors
+- Continues processing even if individual tickets fail
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has ticket read permissions
+- Check that tracker ticket IDs are valid
+- Ensure network connectivity to Freshdesk API
+- Monitor rate limit usage in Freshdesk dashboard
+- Check that tickets have associated tickets
+
+USAGE SCENARIOS:
+- Analyze support ticket patterns and timing
+- Identify peak hours for ticket creation
+- Plan staffing and resource allocation
+- Generate reports for management review
+- Optimize support workflows based on patterns
+"""
+
+import requests
 import openpyxl
 from openpyxl import Workbook
 from openpyxl.worksheet.table import Table, TableStyleInfo

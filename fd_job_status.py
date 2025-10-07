@@ -1,4 +1,70 @@
-﻿import requests
+﻿"""
+Freshdesk Report Job Status Checker Script
+
+DESCRIPTION:
+This script checks the status of a scheduled Freshdesk report export job using
+its UUID. It provides information about the export job status, progress, and
+completion details for monitoring and automation purposes.
+
+REQUIREMENTS:
+- Python 3.x
+- requests library (install with: pip install requests)
+- Valid Freshdesk API key with reports read permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace API_KEY with your actual Freshdesk API key
+2. Replace DOMAIN with your Freshdesk domain (e.g., 'yourcompany.freshdesk.com')
+3. Update UUID with the UUID of your scheduled export job
+4. Ensure your API key has permissions for reports access
+5. Run the script: python fd_job_status.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Reports API: https://developers.freshdesk.com/api/#reports
+- Authentication: Basic Auth with API key
+
+INPUT PARAMETERS:
+- API_KEY: Your Freshdesk API key
+- DOMAIN: Your Freshdesk domain
+- UUID: UUID of the scheduled export job to check
+- STATUS_URL: Complete API URL for the job status
+
+OUTPUT:
+- Console output showing job status and details
+- Detailed response information from the API
+- Error messages if job status cannot be retrieved
+
+JOB STATUS INFORMATION:
+- Job completion status and progress
+- Export file details and download URLs
+- Error information if job failed
+- Timestamps for job start and completion
+
+ERROR HANDLING:
+- Handles HTTP errors with descriptive messages
+- Validates API responses and data structure
+- Displays detailed error information for troubleshooting
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has reports read permissions
+- Check that UUID is valid and job exists
+- Ensure network connectivity to Freshdesk API
+- Check that scheduled export job was created properly
+
+USAGE SCENARIOS:
+- Monitor automated report export jobs
+- Check job completion before downloading files
+- Validate scheduled export configurations
+- Integration with automated reporting workflows
+"""
+
+import requests
 
 # Replace with your details
 API_KEY = "5TMgbcZdRFY70hSpEdj"

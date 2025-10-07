@@ -1,4 +1,82 @@
-﻿import requests
+﻿"""
+Freshdesk Ticket Unmerge and Regional Assignment Script
+
+DESCRIPTION:
+This script processes merged tickets by unmerging them and automatically assigning
+them to appropriate regional groups based on the company's state information. It
+uses state-to-region mapping to determine the correct group assignment and sets
+tickets to Open status for proper handling.
+
+REQUIREMENTS:
+- Python 3.x
+- requests library (install with: pip install requests)
+- Valid Freshdesk API key with ticket and company read/write permissions
+- Freshdesk account and domain access
+
+SETUP INSTRUCTIONS:
+1. Replace api_key with your actual Freshdesk API key
+2. Replace domain with your Freshdesk domain (e.g., 'yourcompany.freshdesk.com')
+3. Update group_mapping with your actual group IDs
+4. Update state_to_region mapping with your state-to-region assignments
+5. Ensure your API key has permissions for ticket and company access
+6. Run the script: python unmerge_and_assign.py
+
+API DOCUMENTATION:
+- Freshdesk API v2: https://developers.freshdesk.com/api/
+- Tickets API: https://developers.freshdesk.com/api/#update_ticket
+- Companies API: https://developers.freshdesk.com/api/#companies
+- Authentication: Basic Auth with API key
+
+INPUT PARAMETERS:
+- api_key: Your Freshdesk API key
+- domain: Your Freshdesk domain
+- group_mapping: Dictionary mapping regions to group IDs
+- state_to_region: Dictionary mapping US states to regions
+
+OUTPUT:
+- Processes tickets and assigns them to appropriate regional groups
+- Sets ticket status to Open (2) for proper handling
+- Console output showing progress and results
+- Detailed logging for troubleshooting
+
+TICKET PROCESSING:
+- Fetches ticket details to get company_id
+- Retrieves company information to get state
+- Maps state to region using state_to_region dictionary
+- Assigns ticket to appropriate group based on region
+- Sets ticket status to Open for processing
+
+REGION MAPPING:
+- Supports US states mapped to regions (West, Northeast, Central Southwest, Central Southeast)
+- Includes Triage group for unmapped states or missing data
+- Handles international and DoDEA cases
+
+ERROR HANDLING:
+- Handles HTTP 404 (ticket/company not found) errors
+- Handles network and parsing errors
+- Validates API responses and data structure
+- Continues processing even if individual tickets fail
+
+SECURITY NOTE:
+- Store API keys securely (environment variables recommended for production)
+- Never commit API keys to version control
+- Rotate API keys regularly for security
+
+TROUBLESHOOTING:
+- Verify API key has ticket and company read/write permissions
+- Check that company custom fields include 'state'
+- Ensure network connectivity to Freshdesk API
+- Verify that group IDs in mapping are correct
+- Check that state names match exactly
+
+USAGE SCENARIOS:
+- Process merged tickets for regional distribution
+- Automatically assign tickets based on company location
+- Maintain consistent regional assignments across tickets
+- Bulk ticket processing for organizational cleanup
+"""
+
+import requests
 import json
 import logging
 
